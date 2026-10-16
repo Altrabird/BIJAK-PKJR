@@ -30,7 +30,12 @@ with sync_playwright() as p:
     ok &= 'MELAWAN_ARUS' in l
     # 3) ride north through the L junction (7,8) on red: force EW green so NS is red
     pg.evaluate(f"(() => {{ const G = {G}; const P = G.player; G.sig.t['7,8'] = 18; const [x, z] = G.map.center(7, 9); P.veh.position.set(x - 1.75, 0, z + 2); P.yaw = Math.PI; P.speed = 0; P.ride.tile = [7, 9]; }})()")
-    pg.keyboard.down('w'); time.sleep(3.0); pg.keyboard.up('w'); time.sleep(0.5)
+    # hold W until the offence shows up (game time is capped per frame, so slow software GL needs longer)
+    pg.keyboard.down('w')
+    for _ in range(40):
+        time.sleep(0.2)
+        if 'LANGGAR_LAMPU_MERAH' in log(pg): break
+    pg.keyboard.up('w'); time.sleep(0.5)
     l = log(pg); print('junction offences:', l)
     ok &= 'LANGGAR_LAMPU_MERAH' in l
     print('page errors:', errs)

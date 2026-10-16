@@ -5,7 +5,7 @@ import { TOWN } from './maps.js';
 import { doorPoint, roadRoute, DIR, left } from './map.js';
 import { createGame } from './game.js';
 import { HUD, modal, screen, esc } from './hud.js';
-import { makeBus, makeCar, makeMotorcycle } from './vehicles.js';
+import { makeBus, makeCar, makeMotorcycle, SEATS } from './vehicles.js';
 import { makePerson } from './people.js';
 import { RULES, GOOD } from './rules.js';
 import { say, sfx } from './audio.js';
@@ -240,7 +240,7 @@ function rideAlong(M, P, map, setStep, goTo, finish) {
     mesh = makeMotorcycle();
     const ayah = makePerson({ role: 'awam', jantina: 'lelaki', shirt: 0x2e7d32, pants: 0x37474f, bag: false });
     ayah.pose = 'sit'; ayah.animate(0, 0); ayah.setHelmet(true, 0x222222);
-    ayah.root.position.set(0, 0.45, -0.05); ayah.root.scale.setScalar(1.15); mesh.add(ayah.root);
+    ayah.root.position.set(...SEATS.rider); ayah.root.scale.setScalar(1.15); mesh.add(ayah.root);
   } else mesh = makeCar('car_wagon');
   const wp = moto ? [[5, 14], [14, 14], [14, 10]] : [[5, 14], [14, 14], [14, 8], [9, 8]];
   let route = [wp[0]];
@@ -268,7 +268,7 @@ function rideAlong(M, P, map, setStep, goTo, finish) {
       // put the murid on the back seat, visibly
       P.person.root.visible = true; P.person.pose = 'sit'; P.person.setHelmet(a.ok || a.rule === 'TOPI_TIDAK_DIIKAT');
       P.board(mesh); P.person.root.visible = true;
-      mesh.add(P.person.root); P.person.root.position.set(0, 0.45, -0.6); P.person.root.rotation.set(0, 0, 0);
+      mesh.add(P.person.root); P.person.root.position.set(...SEATS.pillion); P.person.root.rotation.set(0, 0, 0);
     } else {
       const a = await HUD.choice('Masuk kereta', 'Di mana awak patut duduk?', [
         { e: '🪑', label: 'Kerusi belakang', ok: true, note: 'Kanak-kanak paling selamat di kerusi belakang.' },

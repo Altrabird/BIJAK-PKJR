@@ -1,5 +1,5 @@
-// People (murid, polis, pengawas, orang awam): rigged CC0 humans by Quaternius (assets/models/person_*.glb),
-// recoloured per role, playing their Idle/Walk/Run clips with code-driven pose overrides (look, signal, sit, pedal).
+// People (murid, polis, pengawas, orang awam): realistic CC0 humans made with MakeHuman/MPFB (assets/models/person_*.glb,
+// Idle/Walk/Run baked from Quaternius clips), tinted per role, with code-driven pose overrides (look, signal, sit, pedal).
 import * as THREE from 'three';
 import { clone } from 'three/addons/utils/SkeletonUtils.js';
 import { E, mat } from './engine.js';
@@ -17,16 +17,23 @@ const G = {
   helmet: new THREE.SphereGeometry(0.112, 18, 10, 0, Math.PI * 2, 0, Math.PI * 0.56),
   cap: new THREE.CylinderGeometry(0.1, 0.095, 0.06, 16), capTop: new THREE.CylinderGeometry(0.115, 0.115, 0.018, 16),
   // open at the front (+Z) so the face shows
-  tudung: new THREE.SphereGeometry(0.092, 20, 14, Math.PI / 2 + 1, Math.PI * 2 - 2, 0, Math.PI * 0.78),
-  cape: new THREE.CylinderGeometry(0.07, 0.15, 0.12, 18, 1, true),
+  // set back from the skull centre so the face pokes out of the front
+  tudung: new THREE.SphereGeometry(0.088, 24, 16, 0, Math.PI * 2, 0, Math.PI * 0.78),
+  cape: new THREE.CylinderGeometry(0.068, 0.15, 0.12, 20, 1, true),
   bag: new THREE.BoxGeometry(0.24, 0.28, 0.11),
 };
 
-// recoloured copies of the model's own materials, shared between people
-const paints = {};
+// tinted copies of the model's own materials, shared between people. Cloth/hair textures are grey (AO/luminance)
+// so the colour is the tint; the skin texture is the lightest tone, so darker tones are a ratio of SKINS[0].
+const paints = {}, light = new THREE.Color(SKINS[0]);
 function paint(src, hex) {
-  const k = src.name + hex;
-  if (!paints[k]) { const m = paints[k] = src.clone(); m.color.setHex(hex); m.metalness = 0; m.roughness = 0.85; }
+  const k = src.uuid + hex;
+  if (!paints[k]) {
+    const c = new THREE.Color(hex);
+    if (src.name === 'Skin') c.setRGB(c.r / light.r, c.g / light.g, c.b / light.b);
+    // Lambert like the rest of the town (cheaper on lab PCs); hair/brow cards are cut out to avoid sorting issues
+    paints[k] = new THREE.MeshLambertMaterial({ name: src.name, color: c, map: src.map, normalMap: src.normalMap, side: src.side, alphaTest: src.transparent ? 0.5 : 0 });
+  }
   return paints[k];
 }
 
@@ -36,31 +43,31 @@ export function makePerson(opts = {}) {
   const uni = UNIFORM[o.jantina];
   const shirt = o.shirt ?? (o.role === 'polis' ? 0xf4f4f4 : o.role === 'pengawas' ? 0xf4e01c : uni.shirt);
   const pants = o.pants ?? (o.role === 'polis' ? 0x1b2440 : uni.pants);
-  const file = o.jantina === 'lelaki' ? 'person_m' : o.dress && !o.tudung ? 'person_fd' : 'person_f';
+  const kid = o.role === 'murid' || o.role === 'pengawas';
+  const file = `person_${kid ? 'kid_' : ''}${o.jantina === 'lelaki' ? (kid ? 'm' : 'man') : (kid ? 'f' : 'woman')}`;
   const gl = E.models[file];
   const model = clone(gl.scene);
   if (!gl.userData.h) { model.updateMatrixWorld(true); gl.userData.h = new THREE.Box3().setFromObject(model).max.y; }
   model.scale.setScalar(HEIGHT / gl.userData.h);
 
   const shoes = o.role === 'murid' ? 0xf2f2f2 : 0x1d1d1d;   // murid wear white canvas shoes
-  const colors = { Shirt: shirt, Pants: pants, Dress: o.shirt ?? pants, Skin: o.skin, Hair: o.hair, HairBase: o.hair, Socks: shoes, Shoes: shoes };
+  const colors = { Shirt: shirt, Pants: pants, Skin: o.skin, Hair: o.hair, Brows: o.hair, Shoes: shoes };
   model.traverse(m => {
     if (!m.isMesh) return;
     m.castShadow = true; m.frustumCulled = false;   // skinned bounds don't follow the animation
-    const c = colors[m.material.name];
-    if (c !== undefined) m.material = paint(m.material, c);
-    if (o.tudung && /^Hair/.test(m.material.name)) m.visible = false;
+    m.material = paint(m.material, colors[m.material.name] ?? 0xffffff);
+    if (o.tudung && m.material.name === 'Hair') m.visible = false;
   });
 
   const root = new THREE.Group(), body = new THREE.Group();
   root.add(body); body.add(model);
-  const bone = n => model.getObjectByName(n) || model.getObjectByName(n.replace('.', ''));
+  const bone = n => model.getObjectByName(n);   // MPFB game_engine rig
   const B = {
-    head: bone('Head'), torso: bone('Torso'), armL: bone('UpperArm.L'), armR: bone('UpperArm.R'),
-    foreL: bone('LowerArm.L'), foreR: bone('LowerArm.R'), legL: bone('UpperLeg.L'), legR: bone('UpperLeg.R'),
-    shinL: bone('LowerLeg.L'), shinR: bone('LowerLeg.R'),
+    head: bone('head'), torso: bone('spine_03'), armL: bone('upperarm_l'), armR: bone('upperarm_r'),
+    foreL: bone('lowerarm_l'), foreR: bone('lowerarm_r'), legL: bone('thigh_l'), legR: bone('thigh_r'),
+    shinL: bone('calf_l'), shinR: bone('calf_r'),
   };
-  const rest = new Map(Object.values(B).map(b => [b, b.quaternion.clone()]));
+  const anim = new Map(Object.values(B).map(b => [b, b.quaternion.clone()]));   // last animated pose, before overrides
 
   // a child of bone b with the character's axes (+Z forward, +X left) and root units, for accessories
   model.updateMatrixWorld(true);
@@ -72,20 +79,21 @@ export function makePerson(opts = {}) {
   };
   const hipY = B.legL.getWorldPosition(new THREE.Vector3()).y;
   const headS = socket(B.head), torsoS = socket(B.torso);
-  const top = new THREE.Group(); top.position.set(0, 0.11, 0.01); headS.add(top);   // centre of the skull
+  // centre of the skull; accessories are sized for a 0.15 m head (kids' heads are relatively bigger than adults')
+  const headLen = HEIGHT - B.head.getWorldPosition(new THREE.Vector3()).y;
+  const top = new THREE.Group(); top.position.set(0, headLen * 0.5, 0.012); top.scale.setScalar(headLen / 0.15); headS.add(top);
 
   const m = (geo, color, x = 0, y = 0, z = 0) => { const k = new THREE.Mesh(geo, mat(color)); k.position.set(x, y, z); k.castShadow = true; return k; };
   if (o.tudung) {
-    const t = new THREE.Mesh(G.tudung, mat(0xffffff, { side: THREE.DoubleSide })); t.castShadow = true; t.scale.set(1, 1.15, 1.1); top.add(t);
-    top.add(m(G.cape, 0xffffff, 0, -0.13, -0.01));
+    const t = new THREE.Mesh(G.tudung, mat(0xffffff, { side: THREE.DoubleSide })); t.castShadow = true; t.position.z = -0.028; t.scale.set(1, 1.12, 1.12); top.add(t);
+    top.add(m(G.cape, 0xffffff, 0, -0.12, -0.012));
   }
   if (o.role === 'polis') { top.add(m(G.cap, 0x1b2440, 0, 0.045, 0)); top.add(m(G.capTop, 0xffffff, 0, 0.08, 0.01)); }
   if (o.bag && o.role === 'murid') torsoS.add(m(G.bag, 0x2c7be5, 0, 0.02, -0.15));
-  const kid = o.role === 'murid' || o.role === 'pengawas';
   root.scale.setScalar(o.scale ?? (kid ? 1 : 1.3));
 
   const mixer = new THREE.AnimationMixer(model);
-  const clip = n => gl.animations.find(a => a.name.endsWith('_' + n));
+  const clip = n => gl.animations.find(a => a.name === n);
   const act = { idle: mixer.clipAction(clip('Idle')), walk: mixer.clipAction(clip('Walk')), run: mixer.clipAction(clip('Run')) };
   let cur = act.idle; cur.play();
   const go = a => { if (a === cur) return; a.reset().play(); cur.crossFadeTo(a, 0.25, true); cur = a; };
@@ -114,9 +122,10 @@ export function makePerson(opts = {}) {
       if (seated || speed < 0.1) go(act.idle);
       else if (speed > 2.6) { go(act.run); act.run.timeScale = speed / (3.4 * s); }
       else { go(act.walk); act.walk.timeScale = Math.max(0.6, speed / (1.15 * s)); }
-      for (const [b, q] of rest) b.quaternion.copy(q);   // bones the clips don't drive would otherwise accumulate turns
+      // undo last frame's overrides; the mixer skips bones whose animated value hasn't changed, so they'd keep them
+      for (const [b, q] of anim) b.quaternion.copy(q);
       mixer.update(dt);
-      if (kid) B.head.scale.setScalar(1.12);              // slightly bigger head reads as a child
+      for (const [b, q] of anim) q.copy(b.quaternion);
       body.position.y = seated ? SEAT_HIP - hipY : 0;
       if (seated) {
         P.phase += dt * (p === 'pedal' ? speed * 2.2 : 0);

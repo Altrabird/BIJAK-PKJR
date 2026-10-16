@@ -24,8 +24,11 @@ Every offence is listed in `js/rules.js`. The same list drives the saman slip, t
 
 ## Tech
 Static site with no build step: `index.html` plus ES modules in `js/`, and Three.js 0.160 vendored in `vendor/`.
-- The 3D models are CC0, from Poly Pizza (Kenney, Quaternius, Kay Lousberg). They were fetched through Blender MCP and exported to `assets/models/`.
-- Characters, the bus, bicycle, motorcycle, school, surau, signs and traffic lights are built in code.
+- The buildings, cars and trees are CC0 models from Poly Pizza (Kenney, Quaternius, Kay Lousberg) in `assets/models/`.
+- People are realistic CC0 humans made with MakeHuman/MPFB in Blender (`tools/build_people.py`), with walk/run/idle
+  clips baked from Quaternius. The game tints their clothes into uniforms. UI icons are Fluent Emoji 3D (MIT).
+- The bicycle, kart, scooter and school bus are CC-BY 3.0 models from Poly Pizza (credited in `assets/CREDITS.md`).
+- The school, surau, signs and traffic lights are built in code.
 - Voices are pre-rendered Malaysian Malay (`ms-MY` Yasmin / Osman). To add new lines, run `node tools/make_voice.mjs`.
 - Progress is saved in the browser's `localStorage` only. There is no server.
 

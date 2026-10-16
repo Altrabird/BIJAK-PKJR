@@ -3,7 +3,7 @@
 import * as THREE from 'three';
 import { E, pick } from './engine.js';
 import { makePerson } from './people.js';
-import { makeBicycle, makeKart, setLights } from './vehicles.js';
+import { makeBicycle, makeKart, setLights, SEATS } from './vehicles.js';
 import { Walker, heightAt, onRoadCell } from './walker.js';
 import { CELL, DIR, OPP, left, right, sideOf, sideBetween, isRoad, isStraight, key } from './map.js';
 import { RULES, GOOD } from './rules.js';
@@ -172,7 +172,7 @@ export class Player {
     v.add(body);
     this.vkind = kind;
     v.add(this.person.root);
-    this.person.root.position.set(0, kind === 'kart' ? -0.16 : 0.32, kind === 'kart' ? -0.15 : -0.32);
+    this.person.root.position.set(...SEATS[kind]);
     this.person.root.rotation.set(0, 0, 0);
     this.person.pose = kind === 'kart' ? 'sit' : 'pedal';
     this.person.setHelmet(this.helmet);
@@ -233,7 +233,6 @@ export class Player {
     v.position.y += (heightAt(m, nx, nz) - v.position.y) * Math.min(1, dt * 10);
     v.rotation.y = this.yaw;
     v.rotation.z = -steer * Math.min(1, this.speed / 4) * 0.12 * (this.vkind === 'bike' ? 1 : 0);
-    v.traverse(o => { if (o.name === 'wheel') o.rotation.x += this.speed * dt * 3; });
     HUD.vctlSpeed(Math.abs(this.speed) * 3.6 * (this.vkind === 'kart' ? 2.2 : 3));   // toy speedometer feels faster
     // hand signal pose
     if (this.vkind !== 'kart') {

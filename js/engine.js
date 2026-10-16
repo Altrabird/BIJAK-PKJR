@@ -126,11 +126,11 @@ export function setDusk(t) {
 // ---- GLB cache. Every model is re-centred (x,z) with its base on y=0. ----
 // fit: max footprint (m) for buildings; yaw: rotation so the model's front faces +Z.
 const MODEL_CFG = {
-  car_hatchback: { yaw: Math.PI }, car_wagon: { yaw: Math.PI }, car_taxi: { yaw: Math.PI }, car_police: { yaw: Math.PI },
-  kart: { yaw: -Math.PI / 2 },
+  car_hatchback: {}, car_wagon: {}, car_taxi: {}, car_police: {},   // these already face +Z
+  bicycle: { fit: 1.5, yaw: Math.PI }, kart: { fit: 1.7, yaw: Math.PI / 2 }, motorcycle: { fit: 1.85 }, bus: { fit: 9.2 },
   house_a: { fit: 7.4 }, house_b: { fit: 7.8 }, house_c: { fit: 7.8 }, shop: { fit: 8.4 }, tower: { fit: 8.2 },
   palm: {}, tree: {}, streetlight: {},
-  person_m: { rig: true }, person_f: { rig: true }, person_fd: { rig: true },   // rigged people keep the raw glTF (scene + clips)
+  person_kid_m: { rig: true }, person_kid_f: { rig: true }, person_man: { rig: true }, person_woman: { rig: true },   // rigged people keep the raw glTF
 };
 
 export async function loadModels(onProgress) {

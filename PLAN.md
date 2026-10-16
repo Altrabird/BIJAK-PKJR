@@ -131,7 +131,7 @@ You gave full authority, so I used these defaults for the 7 open questions:
 3. **Language:** BM only. English was skipped.
 4. **Order:** I built every milestone (M0–M4). Taman Bijak has 7 missions plus free roam, Piala Lalu Lintas has 4 stations and 3 levels, and Mod Bina has share links.
 5. **Multiplayer:** hot-seat team of 4 on one PC. There is no online leaderboard.
-6. **Art:** chunky toy-like low-poly. Buildings, cars and trees are CC0 models from Poly Pizza. People, the bus, bikes and the school are generated in code.
+6. **Art:** chunky toy-like low-poly. Buildings, cars and trees are CC0 models from Poly Pizza. The bus, bikes and the school are generated in code. *(Update: people are now realistic CC0 MakeHuman/MPFB characters, see `assets/CREDITS.md`.)*
 7. **Name:** BIJAK PKJR. The competition mode is called *Piala Lalu Lintas*.
 
 Not built: a roundabout tile, NPC pedestrians or vehicles that break rules on purpose beyond "bad drivers", a background music track, and an English toggle.

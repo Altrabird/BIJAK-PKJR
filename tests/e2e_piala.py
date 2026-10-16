@@ -36,7 +36,7 @@ with sync_playwright() as p:
                 if station == 0:
                     if st['kerb']:
                         for a in ['ArrowRight','ArrowLeft','ArrowRight']: pg.keyboard.press(a); time.sleep(0.2)
-                        for w in range(80):
+                        for w in range(160):   # slow software GL stretches the light cycle in real time
                             ok = pg.evaluate(f"(() => {{ const G = {G}; const w = G.player.walker; const c = w.kerb ? w.kerb.cross : -1; if (c >= 0) {{ const cr = G.map.crossings[c]; if (cr.type === 'pelican') G.sig.press(c); if (cr.type !== 'zebra') return G.sig.pedGreen(c) && !G.sig.pedFlash(c); }} return !G.traffic.cars.some(k => k.v > 0.5 && Math.hypot(k.x - w.x, k.z - w.z) < 10); }})()")
                             if ok: break
                             time.sleep(0.4)
