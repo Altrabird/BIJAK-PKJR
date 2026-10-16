@@ -144,7 +144,7 @@ export const HUD = {
       </div>
       <div class="speed" id="v-spd">0 km/j</div>
     </div>`);
-    $('#hud').appendChild(v);
+    $('#hud').appendChild(v); this.root.classList.add('riding');   // css moves the minimap above the joystick
     v.querySelectorAll('[data-s]').forEach(b => b.onclick = () => o.signal(b.dataset.s));
     const joy = $('#v-joy', v), knob = joy.firstElementChild;
     let id = null;
@@ -161,5 +161,5 @@ export const HUD = {
   },
   vctlSignal(s) { if (this.vctl) this.vctl.querySelectorAll('[data-s]').forEach(b => b.classList.toggle('on', b.dataset.s === s)); },
   vctlSpeed(kmh) { if (this.vctl) $('#v-spd', this.vctl).textContent = `${Math.round(kmh)} km/j`; },
-  vctlClose() { if (this.vctl) { this.vctl.remove(); this.vctl = null; } },
+  vctlClose() { if (this.vctl) { this.vctl.remove(); this.vctl = null; } this.root.classList.remove('riding'); },
 };

@@ -104,6 +104,7 @@ export function startMission(idx, murid, onExit) {
     else onExit();
   };
 
+  G.onPlayerInjured = () => { P.stats.safe = 0; };   // taken to hospital: the mission is over
   G.hooks.push(() => {
     if (!done && P.stats.safe <= 0) finish(false);
     if (goal) goal.ring.rotation.z += 0.02;

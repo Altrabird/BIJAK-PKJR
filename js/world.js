@@ -179,7 +179,7 @@ export function buildWorld(map, opts = {}) {
     const put = (o, x = cx, z = cz, ry = r) => { o.position.set(x, Y_GRASS, z); o.rotation.y = ry; root.add(o); return o; };
     const MODEL = { H: 'house_a', B: 'house_b', C: 'house_c', K: 'shop', G: 'tower' };
     if (MODEL[ch]) put(model(MODEL[ch]));
-    else if (ch === 'T') { const t = put(model('tree'), cx + rnd(i, j) * 2, cz + rnd(j, i) * 2, rnd(i + 3, j) * 6); t.scale.setScalar(0.9 + rnd(i, j + 5) * 0.4); }
+    else if (ch === 'T') { const t = put(model(['tree_a', 'tree_b', 'tree_c'][Math.floor((rnd(i + 7, j) + 0.5) * 3)]), cx + rnd(i, j) * 2, cz + rnd(j, i) * 2, rnd(i + 3, j) * 6); t.scale.setScalar(0.8 + rnd(i, j + 5) * 0.3); }
     else if (ch === 'P') { const t = put(model('palm'), cx + rnd(i, j) * 2, cz + rnd(j, i) * 2, rnd(i + 3, j) * 6); t.scale.setScalar(0.85 + rnd(i, j + 5) * 0.3); }
     else if (ch === 'M') put(surau());
     else if (ch === 'y') put(playground());

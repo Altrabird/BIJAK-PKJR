@@ -7,6 +7,8 @@ import { Walker, onRoadCell } from './walker.js';
 import { makePerson, randomCitizen } from './people.js';
 import { Player } from './player.js';
 import { sfx } from './audio.js';
+import { addIncidents } from './incidents.js';
+import { makeMinimap } from './minimap.js';
 
 // opts: cars, npcs, vmax, bad, kinds, dusk, murid, staff (pengawas/polis)
 export function createGame(def, opts = {}) {
@@ -46,14 +48,22 @@ export function createGame(def, opts = {}) {
     G.player.offence('NYARIS');
   };
   G.traffic.onHorn = () => sfx('horn');
+  G.incidents = addIncidents(G);
+  G.minimap = makeMinimap(G);
 
   // NPC kerb behaviour: obey ped lights, look both ways at zebras, never cross into near traffic
   const carsNear = (x, z, r, vmin) => G.traffic.cars.some(c => c.v > vmin && Math.hypot(c.x - x, c.z - z) < r);
+  // a car (moving or stopped) with any part of its body on this crossing: wait, never walk through it
+  const carOnCrossing = id => G.traffic.cars.some(c => {
+    for (let d = -c.half; d <= c.half; d += 0.5) if (map.crossAt(c.x + c.dx * d, c.z + c.dz * d) === id) return true;
+    return false;
+  });
   G.npcKerb = (w, k) => {
     w.person.head.rotation.y = Math.sin(k.t * 3) * 0.9;
     if (k.cross >= 0) {
       const cr = map.crossings[k.cross];
       if (cr.type === 'pelican') G.sig.press(cr.id);
+      if (carOnCrossing(cr.id)) return false;
       if (cr.type !== 'zebra') return G.sig.pedGreen(cr.id) && !G.sig.pedFlash(cr.id) && k.t > 0.8;
       return k.t > 1.4 && !carsNear(cr.x, cr.z, 9, 2.5);
     }
@@ -69,11 +79,13 @@ export function createGame(def, opts = {}) {
     if (p) obs.push(p);
     for (const w of G.npcs) {
       const c = map.cellAt(w.x, w.z);
-      if (onRoadCell(c) || w.waiting) obs.push({ x: w.x, z: w.z, kind: 'ped', waiting: w.waiting && !onRoadCell(c), ref: w });
+      if (onRoadCell(c) || w.waiting) obs.push({ x: w.x, z: w.z, kind: 'ped', waiting: w.waiting && !onRoadCell(c), cross: w.kerb?.cross, injured: w.injured, ref: w });
     }
     for (const s of G.statics) if (s.obstacle) obs.push(s.obstacle);
     G.traffic.update(dt, obs);
+    G.incidents.update(dt);
     for (const w of G.npcs) {
+      if (w.injured) continue;
       if (w.state === 'idle') {
         w.person.head.rotation.y *= 0.9;
         w.rest -= dt;
@@ -85,6 +97,7 @@ export function createGame(def, opts = {}) {
     G.player.update(dt);
     G.world.paint(G.sig);
     for (const h of G.hooks) h(dt);
+    G.minimap.update(dt);
   };
 
   G.dispose = () => {
@@ -93,6 +106,7 @@ export function createGame(def, opts = {}) {
     G.statics.forEach(s => E.scene.remove(s.root));
     G.player.dispose();
     G.world.dispose();
+    G.minimap.dispose();
     E.onTick = E.onTick.filter(f => f !== G.update);
   };
   E.onTick.push(G.update);

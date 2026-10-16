@@ -16,10 +16,15 @@ It is a tribute to the old **Pertandingan Lalu Lintas Shell** (Shell Traffic Gam
 Left-hand traffic, the kerb drill (**kanan–kiri–kanan**), the green/red man, pelican buttons, zebra crossings, BERHENTI signs, hand signals, helmets, seat belts and back seats, getting out on the kerb side, waiting behind the yellow line, and not crossing in front of a stopped bus.
 Every offence is listed in `js/rules.js`. The same list drives the saman slip, the polis voice, the mission report and the competition marks.
 
+The town is alive: drivers stop behind the line before zebras and junctions and keep crossings clear, careless drivers
+run red lights and are chased, pulled over and fined by a police car, and a car that hits someone knocks them down and an
+ambulance comes to take them away. If it is you, the mission ends with an explanation.
+
 ## Controls
 - **Walk:** click or tap the ground. At every kerb the game stops you for the kerb drill: ← kiri, → kanan, Space lintas, B pelican button.
 - **Ride:** W/A/S/D or the on-screen joystick. Z / C give left / right signals, H rings the bell.
-- **Camera:** right-drag or two fingers to rotate, mouse wheel or pinch to zoom, Q/E to turn 45°.
+- **Camera:** hold right-click and drag (or two fingers) to look all the way round and tilt, mouse wheel or pinch to zoom, Q/E to turn 45°.
+- **Map:** the GTA-style minimap (bottom left) turns with the camera and pins the mission destination; M or a click opens the full map.
 - **Settings:** Tahap 1 shows hints during the kerb drill. *Ringan* graphics mode suits older lab PCs.
 
 ## Tech

@@ -47,6 +47,8 @@ const SFX = {
   look: () => tone(660, 0, 0.08, 'sine', 0.06),
   bell: () => { tone(1568, 0, 0.3, 'sine', 0.08); tone(1568, 0.18, 0.3, 'sine', 0.08); },
   cheer: () => { noise(0, 1.4, 0.12, 900); SFX.chime(); },
+  siren: () => { tone(650, 0, 0.6, 'sawtooth', 0.04, 1000); tone(1000, 0.6, 0.6, 'sawtooth', 0.04, 650); },
+  thud: () => { noise(0, 0.3, 0.5, 160); tone(90, 0, 0.25, 'sine', 0.2, 50); },
 };
 export function sfx(n) { if (A.on && SFX[n]) try { SFX[n](); } catch { /* ignore */ } }
 export function unlockAudio() { ctx(); }

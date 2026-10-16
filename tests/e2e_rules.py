@@ -25,7 +25,11 @@ with sync_playwright() as p:
     ok &= 'TIADA_KERB_DRILL' in l and 'LINTAS_BUKAN_TEMPAT' in l
     # 2) ride east in the WRONG (south) lane of row 14
     pg.evaluate(f"(() => {{ const G = {G}; const P = G.player; P.helmet = true; const [x, z] = G.map.center(2, 14); P.walker.place(x, z); P.mount('bike', {{ at: [x, z + 1.75], yaw: Math.PI / 2 }}); }})()")
-    pg.keyboard.down('w'); time.sleep(3.5); pg.keyboard.up('w'); time.sleep(0.5)
+    pg.keyboard.down('w')
+    for _ in range(40):   # until detected: slow software GL stretches game time
+        time.sleep(0.2)
+        if 'MELAWAN_ARUS' in log(pg): break
+    pg.keyboard.up('w'); time.sleep(0.5)
     l = log(pg); print('ride offences:', l)
     ok &= 'MELAWAN_ARUS' in l
     # 3) ride north through the L junction (7,8) on red: force EW green so NS is red

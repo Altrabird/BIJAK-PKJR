@@ -20,7 +20,7 @@ export class Player {
     this.person = makePerson({ ...this.murid, role: 'murid' });
     const [sx, sz] = G.map.center(...G.map.spawn);
     this.walker = new Walker(G.map, this.person, sx, sz, 1.7);
-    this.mode = 'walk';            // walk | ride | passenger | frozen
+    this.mode = 'walk';            // walk | ride | passenger | frozen | injured
     this.stats = { safe: 100, xp: 0, saman: 0, log: [], good: [] };
     this.cool = {};
     this.helmet = false; this.lightsOn = false; this.brightClothes = true;
@@ -66,9 +66,10 @@ export class Player {
 
   obstacle() {
     if (this.mode === 'ride') return { x: this.veh.position.x, z: this.veh.position.z, kind: 'veh', half: 0.9, ref: this };
+    if (this.mode === 'injured') return { x: this.walker.x, z: this.walker.z, kind: 'ped', injured: true, ref: this };
     if (this.mode !== 'walk') return null;
     const w = this.walker, c = this.map.cellAt(w.x, w.z);
-    if (onRoadCell(c) || w.state === 'kerb') return { x: w.x, z: w.z, kind: 'ped', waiting: w.state === 'kerb' && !onRoadCell(c), ref: this };
+    if (onRoadCell(c) || w.state === 'kerb') return { x: w.x, z: w.z, kind: 'ped', waiting: w.state === 'kerb' && !onRoadCell(c), cross: w.kerb?.cross, ref: this };
     return null;
   }
 
@@ -306,6 +307,13 @@ export class Player {
         R.junc = null;
       }
     }
+  }
+
+  // ---------- struck by a car (incidents.js animates the fall and sends the ambulance) ----------
+  injure() { this.walker.stop(); this.drill = null; HUD.kerbClose(); this.mode = 'injured'; this.offence('DILANGGAR'); }
+  recover(x, z) {
+    this.person.root.rotation.set(0, 0, 0); this.person.root.visible = true;
+    this.walker.place(x, z); this.mode = 'walk'; this.injured = false;
   }
 
   // ---------- passenger ----------

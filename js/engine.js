@@ -44,26 +44,31 @@ function resize() {
   E.camera.updateProjectionMatrix();
 }
 
-// ---- camera: follow target, yaw by right-drag / two fingers / Q-E, zoom by wheel / pinch ----
+// ---- camera: follow target; right/middle-drag orbits 360° and tilts, two fingers turn/tilt/pinch, Q-E turn, wheel zooms ----
 function bindCameraInput(el) {
   let drag = null, pinch = null;
   el.addEventListener('contextmenu', e => e.preventDefault());
-  el.addEventListener('pointerdown', e => { if (e.button === 2 || e.button === 1) drag = { x: e.clientX }; });
-  addEventListener('pointermove', e => { if (drag) { E.cam.yawWant -= (e.clientX - drag.x) * 0.008; drag.x = e.clientX; } });
+  const tilt = dy => { E.cam.pitch = THREE.MathUtils.clamp(E.cam.pitch + dy * 0.006, 0.12, 1.45); };
+  el.addEventListener('pointerdown', e => { if (e.button === 2 || e.button === 1) drag = { x: e.clientX, y: e.clientY }; });
+  addEventListener('pointermove', e => {
+    if (!drag) return;
+    E.cam.yawWant -= (e.clientX - drag.x) * 0.008; tilt(e.clientY - drag.y);
+    drag.x = e.clientX; drag.y = e.clientY;
+  });
   addEventListener('pointerup', () => drag = null);
   el.addEventListener('wheel', e => { E.cam.distWant = THREE.MathUtils.clamp(E.cam.distWant * (e.deltaY > 0 ? 1.12 : 0.89), 10, 110); }, { passive: true });
   el.addEventListener('touchstart', e => {
     if (e.touches.length === 2) {
       const [a, b] = e.touches;
-      pinch = { d: Math.hypot(a.clientX - b.clientX, a.clientY - b.clientY), x: (a.clientX + b.clientX) / 2 };
+      pinch = { d: Math.hypot(a.clientX - b.clientX, a.clientY - b.clientY), x: (a.clientX + b.clientX) / 2, y: (a.clientY + b.clientY) / 2 };
     }
   }, { passive: true });
   el.addEventListener('touchmove', e => {
     if (e.touches.length === 2 && pinch) {
-      const [a, b] = e.touches, d = Math.hypot(a.clientX - b.clientX, a.clientY - b.clientY), x = (a.clientX + b.clientX) / 2;
+      const [a, b] = e.touches, d = Math.hypot(a.clientX - b.clientX, a.clientY - b.clientY), x = (a.clientX + b.clientX) / 2, y = (a.clientY + b.clientY) / 2;
       E.cam.distWant = THREE.MathUtils.clamp(E.cam.distWant * pinch.d / d, 10, 110);
-      E.cam.yawWant -= (x - pinch.x) * 0.01;
-      pinch = { d, x };
+      E.cam.yawWant -= (x - pinch.x) * 0.01; tilt(y - pinch.y);
+      pinch = { d, x, y };
     }
   }, { passive: true });
   el.addEventListener('touchend', () => pinch = null);
@@ -127,9 +132,9 @@ export function setDusk(t) {
 // fit: max footprint (m) for buildings; yaw: rotation so the model's front faces +Z.
 const MODEL_CFG = {
   car_hatchback: {}, car_wagon: {}, car_taxi: {}, car_police: {},   // these already face +Z
-  bicycle: { fit: 1.5, yaw: Math.PI }, kart: { fit: 1.7, yaw: Math.PI / 2 }, motorcycle: { fit: 1.85 }, bus: { fit: 9.2 },
+  bicycle: { fit: 1.5, yaw: Math.PI }, kart: { fit: 1.7, yaw: Math.PI / 2 }, motorcycle: { fit: 1.85 }, bus: { fit: 9.2 }, ambulance: { fit: 5.6 },
   house_a: { fit: 7.4 }, house_b: { fit: 7.8 }, house_c: { fit: 7.8 }, shop: { fit: 8.4 }, tower: { fit: 8.2 },
-  palm: {}, tree: {}, streetlight: {},
+  palm: {}, tree_a: {}, tree_b: {}, tree_c: {}, streetlight: {},
   person_kid_m: { rig: true }, person_kid_f: { rig: true }, person_man: { rig: true }, person_woman: { rig: true },   // rigged people keep the raw glTF
 };
 
@@ -157,7 +162,12 @@ function normalise(root, cfg) {
   }
   const c = box.getCenter(new THREE.Vector3());
   root.position.x -= c.x; root.position.z -= c.z; root.position.y -= box.min.y;
-  wrap.traverse(o => { if (o.isMesh) { o.castShadow = true; o.receiveShadow = true; } });
+  wrap.traverse(o => {
+    if (!o.isMesh) return;
+    o.castShadow = true; o.receiveShadow = true;
+    // leaf cards ship alpha-blended; cut them out instead so overlapping leaves don't flicker
+    if (o.material.transparent && o.material.map) Object.assign(o.material, { transparent: false, alphaTest: 0.5, depthWrite: true });
+  });
   return wrap;
 }
 

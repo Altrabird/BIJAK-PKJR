@@ -15,12 +15,15 @@ the **CC-BY 3.0** ones are used under https://creativecommons.org/licenses/by/3.
 | shop.glb | Small Building | Kenney | CC0 | https://poly.pizza/m/gyjF60t7CG |
 | tower.glb | Large Building | Kenney | CC0 | https://poly.pizza/m/3IhrYZp6tP |
 | palm.glb | Palm Tree | Quaternius | CC0 | https://poly.pizza/m/A6cKJYFsIb |
-| tree.glb | Tree | Quaternius | CC0 | https://poly.pizza/m/i4QMw4L64D |
+| tree_a.glb | Tree | Quaternius | CC0 | https://poly.pizza/m/t9KbsfYdXz |
+| tree_b.glb | Tree | Quaternius | CC0 | https://poly.pizza/m/aVOxaHRPWe |
+| tree_c.glb | Tree | Quaternius | CC0 | https://poly.pizza/m/qZtx0AHhcy |
 | streetlight.glb | Streetlight | Kay Lousberg | CC0 | https://poly.pizza/m/vPFSLYh6sg |
 | bicycle.glb | Bicycle | jeremy | CC-BY 3.0 | https://poly.pizza/m/axc03j3xKfz |
 | kart.glb | Go kart | Poly by Google | CC-BY 3.0 | https://poly.pizza/m/3hkutVs0AAV |
 | motorcycle.glb | Vespa | Jasmine Roberts | CC-BY 3.0 | https://poly.pizza/m/blGLclvvdEM |
 | bus.glb | Schoolbus | Poly by Google | CC-BY 3.0 | https://poly.pizza/m/8xacyNqdJ3t |
+| ambulance.glb | Ambulance | Poly by Google | CC-BY 3.0 | https://poly.pizza/m/8NOFImgkI5N |
 
 **People** (`person_kid_m`, `person_kid_f`, `person_man`, `person_woman`) were made with
 [MakeHuman / MPFB 2](https://static.makehumancommunity.org/mpfb.html) and its CC0 `makehuman_system_assets` pack
@@ -33,7 +36,9 @@ UI icons in `assets/icons/` are **Fluent Emoji 3D** © Microsoft, MIT licence
 (https://github.com/microsoft/fluentui-emoji), taken from the `@lobehub/fluent-emoji-3d` package.
 Fetch any new ones with `node tools/fetch_icons.mjs`. The line icons in `js/icons.js` are from Lucide (ISC licence).
 
-Everything else (school, surau, road signs, traffic lights, roads, the BAS SEKOLAH signs and vehicle lights)
+Tree and ambulance textures were re-encoded as 512 px WebP to keep downloads small.
+
+Everything else (school, surau, road signs, traffic lights, roads, the BAS SEKOLAH signs, vehicle and beacon lights, minimap)
 is generated in code for this project.
 Three.js © three.js authors (MIT), vendored in `vendor/three/`.
 Voices: Microsoft Edge neural TTS, ms-MY (Yasmin, Osman), pre-rendered.

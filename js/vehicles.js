@@ -71,3 +71,26 @@ export function makeMotorcycle() {
   addLights(g, L / 2 + 0.01, H * 0.55, 0.06);
   return g;
 }
+
+// flashing roof lights for emergency vehicles; incidents.js toggles them via userData.beacon
+function addBeacon(g, y, colors) {
+  const geo = new THREE.BoxGeometry(0.42, 0.14, 0.24);
+  g.userData.beacon = colors.map((c, k) => {
+    const b = new THREE.Mesh(geo, new THREE.MeshBasicMaterial({ color: c }));
+    b.position.set((k ? -1 : 1) * 0.3, y, 0); b.visible = false; g.add(b); return b;
+  });
+}
+
+export function makePolice() {
+  const g = makeCar('car_police');
+  addBeacon(g, size(g).y + 0.05, [0xff2020, 0x2060ff]);
+  return g;
+}
+
+export function makeAmbulance() {
+  const g = new THREE.Group(), m = model('ambulance'); g.add(m);
+  const { x: W, y: H, z: L } = size(m);
+  addBeacon(g, H + 0.05, [0xff2020, 0xffffff]);
+  addLights(g, L / 2 + 0.01, H * 0.3, W * 0.36);
+  return g;
+}
