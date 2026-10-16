@@ -21,7 +21,7 @@ run red lights and are chased, pulled over and fined by a police car, and a car 
 ambulance comes to take them away. If it is you, the mission ends with an explanation.
 
 ## Controls
-- **Walk:** click or tap the ground. At every kerb the game stops you for the kerb drill: ← kiri, → kanan, Space lintas, B pelican button.
+- **Walk:** click or tap the ground; 🏃 or hold Shift to run. At every kerb the game stops you for the kerb drill: ← kiri, → kanan, Space lintas, B pelican button. Clicking across the road again also crosses (skipping the drill still earns a saman).
 - **Ride:** W/A/S/D or the on-screen joystick. Z / C give left / right signals, H rings the bell.
 - **Camera:** hold right-click and drag (or two fingers) to look all the way round and tilt, mouse wheel or pinch to zoom, Q/E to turn 45°.
 - **Map:** the GTA-style minimap (bottom left) turns with the camera and pins the mission destination; M or a click opens the full map.

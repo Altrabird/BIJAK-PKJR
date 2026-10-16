@@ -9,6 +9,27 @@ export const Y_ROAD = 0.03, Y_WALK = 0.16, Y_GRASS = 0;   // grass plane at 0, a
 
 const rotFor = s => Math.atan2(DIR[s][0], DIR[s][1]);   // rotation.y that points +Z toward side s
 
+// CC0 surface textures (assets/textures), tiled in world metres so every patch matches its neighbours
+const texCache = {};
+function tex(name) {
+  if (texCache[name]) return texCache[name];
+  const t = texCache[name] = new THREE.TextureLoader().load(`assets/textures/${name}.webp`);
+  t.wrapS = t.wrapT = THREE.RepeatWrapping; t.colorSpace = THREE.SRGBColorSpace; t.anisotropy = 4;
+  return t;
+}
+const texMat = (name, color = 0xffffff) => new THREE.MeshLambertMaterial({ map: tex(name), color });
+// UVs from world position: top faces use (x, z), walls use their horizontal run and height; `m` metres per texture
+function worldUV(geo, m) {
+  const p = geo.attributes.position, n = geo.attributes.normal, uv = new Float32Array(p.count * 2);
+  for (let k = 0; k < p.count; k++) {
+    const nx = Math.abs(n.getX(k)), ny = Math.abs(n.getY(k)), x = p.getX(k), y = p.getY(k), z = p.getZ(k);
+    const [u, v] = ny >= nx && ny >= Math.abs(n.getZ(k)) ? [x, z] : nx > Math.abs(n.getZ(k)) ? [z, y] : [x, y];
+    uv[k * 2] = u / m; uv[k * 2 + 1] = v / m;
+  }
+  geo.setAttribute('uv', new THREE.BufferAttribute(uv, 2));
+  return geo;
+}
+
 export function buildWorld(map, opts = {}) {
   const root = new THREE.Group(), parts = { asphalt: [], walk: [], white: [], yellow: [], field: [], park: [] };
   const W = map.W * T, H = map.H * T;
@@ -19,8 +40,8 @@ export function buildWorld(map, opts = {}) {
   const headGeo = new THREE.BoxGeometry(0.36, 1.0, 0.3), lampGeo = new THREE.SphereGeometry(0.12, 10, 8), poleGeo = new THREE.CylinderGeometry(0.07, 0.07, 3.2, 8);
   const pedGeo = new THREE.BoxGeometry(0.34, 0.62, 0.22), pedFace = new THREE.PlaneGeometry(0.26, 0.26);
   // ground
-  const ground = new THREE.Mesh(new THREE.PlaneGeometry(W + 160, H + 160), mat(0x7cb55a));
-  ground.rotation.x = -Math.PI / 2; ground.position.y = Y_GRASS; ground.receiveShadow = true; root.add(ground);
+  const ground = new THREE.Mesh(worldUV(new THREE.PlaneGeometry(W + 160, H + 160).rotateX(-Math.PI / 2), 6), texMat('grass'));
+  ground.position.y = Y_GRASS; ground.receiveShadow = true; root.add(ground);
 
   const rect = (list, x, z, w, d, y, h = 0) => {
     const g = h ? new THREE.BoxGeometry(w, h, d) : new THREE.PlaneGeometry(w, d);
@@ -195,7 +216,7 @@ export function buildWorld(map, opts = {}) {
     const s = facing(map, Math.round((cl.i0 + cl.i1) / 2), Math.round((cl.j0 + cl.j1) / 2));
     const [bw, bd] = DIR[s][0] ? [d, w] : [w, d];            // width across the facing side
     const bx = bw - 3, depth = 6.5;
-    const blk = new THREE.Mesh(new THREE.BoxGeometry(bx, 6.4, depth), mat(0xf3e3c3)); blk.position.set(0, 3.2, -bd / 2 + depth / 2 + 1.5); blk.castShadow = blk.receiveShadow = true; g.add(blk);
+    const blk = new THREE.Mesh(worldUV(new THREE.BoxGeometry(bx, 6.4, depth), 2.5), texMat('brick')); blk.position.set(0, 3.2, -bd / 2 + depth / 2 + 1.5); blk.castShadow = blk.receiveShadow = true; g.add(blk);
     const roof = new THREE.Mesh(new THREE.BoxGeometry(bx + 0.6, 0.4, depth + 0.8), mat(0x3a6ea5)); roof.position.set(0, 6.6, blk.position.z); g.add(roof);
     for (let f = 0; f < 2; f++) for (let x = -bx / 2 + 1.5; x < bx / 2 - 1; x += 2.2) {
       const wdw = new THREE.Mesh(new THREE.BoxGeometry(1.4, 1.1, 0.1), mat(0x7fb3d5)); wdw.position.set(x, 1.8 + f * 2.8, blk.position.z + depth / 2 + 0.03); g.add(wdw);
@@ -231,7 +252,7 @@ export function buildWorld(map, opts = {}) {
   }
   function field(cl) {
     const g = new THREE.Group(), w = (cl.i1 - cl.i0 + 1) * T - 3, d = (cl.j1 - cl.j0 + 1) * T - 3;
-    const f = new THREE.Mesh(new THREE.PlaneGeometry(w, d), mat(0x5fa845)); f.rotation.x = -Math.PI / 2; f.position.y = 0.02; f.receiveShadow = true; g.add(f);
+    const f = new THREE.Mesh(worldUV(new THREE.PlaneGeometry(w, d).rotateX(-Math.PI / 2), 6), texMat('grass', 0xd8f0c8)); f.position.y = 0.02; f.receiveShadow = true; g.add(f);
     const line = (x, z, a, b) => { const l = new THREE.Mesh(new THREE.PlaneGeometry(a, b), mat(0xffffff)); l.rotation.x = -Math.PI / 2; l.position.set(x, 0.03, z); g.add(l); };
     line(0, -d / 2 + 0.5, w - 1, 0.15); line(0, d / 2 - 0.5, w - 1, 0.15); line(-w / 2 + 0.5, 0, 0.15, d - 1); line(w / 2 - 0.5, 0, 0.15, d - 1); line(0, 0, 0.15, d - 1);
     for (const s of [-1, 1]) {
@@ -290,10 +311,12 @@ export function buildWorld(map, opts = {}) {
   }
 
   // merge static geometry per material
-  const MAT = { asphalt: mat(0x41454c), walk: mat(0xc9c4b8), white: mat(0xf4f4f4), yellow: mat(0xf2c230), park: mat(0x50545b) };
+  const MAT = { asphalt: mat(0x41454c), walk: texMat('pavement'), white: mat(0xf4f4f4), yellow: mat(0xf2c230), park: mat(0x50545b) };
   for (const [k, list] of Object.entries(parts)) {
     if (!list.length) continue;
-    const mesh = new THREE.Mesh(mergeGeometries(list.map(g => g.index ? g.toNonIndexed() : g)), MAT[k] || mat(0x888888));
+    const geo = mergeGeometries(list.map(g => g.index ? g.toNonIndexed() : g));
+    if (k === 'walk') worldUV(geo, 2);   // pavers: one texture every 2 m
+    const mesh = new THREE.Mesh(geo, MAT[k] || mat(0x888888));
     mesh.receiveShadow = true; mesh.castShadow = k === 'walk';
     root.add(mesh);
     list.forEach(g => g.dispose());

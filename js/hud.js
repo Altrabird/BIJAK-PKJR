@@ -39,6 +39,7 @@ export const HUD = {
       </div>
       <div class="objective hidden" id="h-obj"></div>
       <div class="camtools">
+        <button class="icon-btn" id="h-run" title="Lari / jalan (tahan Shift)">🏃</button>
         <button class="icon-btn" id="h-rl" title="Putar kamera (Q)">⟲</button>
         <button class="icon-btn" id="h-zi" title="Zum masuk">＋</button>
         <button class="icon-btn" id="h-zo" title="Zum keluar">－</button>
@@ -53,6 +54,8 @@ export const HUD = {
   },
   show(on = true) { this.root.classList.toggle('hidden', !on); },
   onMenu(fn) { $('#h-menu', this.root).onclick = () => { sfx('click'); fn(); }; },
+  onRun(fn) { $('#h-run', this.root).onclick = () => { sfx('click'); fn(); }; },
+  setRun(on) { $('#h-run', this.root).classList.toggle('on', on); },
   setMurid(m) { $('#h-name', this.root).textContent = m.nama; $('#h-av', this.root).textContent = m.jantina === 'perempuan' ? '👧' : '👦'; },
   setStats({ safe, xp, saman }) {
     const b = $('#h-safe', this.root);
@@ -99,7 +102,7 @@ export const HUD = {
         <button class="btn green" data-a="G">🚶 Lintas!</button>
         <button class="btn red" data-a="X">✕</button>
       </div>
-      <div class="keys">Papan kekunci: ← kiri · → kanan · Space lintas${o.pelican ? ' · B butang' : ''} · Esc batal</div>
+      <div class="keys">Lihat kanan, kiri, kanan dahulu, kemudian tekan <b>Lintas</b> (atau klik seberang jalan). Papan kekunci: ← kiri · → kanan · Space lintas${o.pelican ? ' · B butang' : ''} · Esc batal</div>
     </div>`);
     $('#hud').appendChild(k);
     k.querySelectorAll('[data-a]').forEach(b => b.onclick = () => o.act(b.dataset.a));

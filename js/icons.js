@@ -27,15 +27,16 @@ function icon(e) {
   if (LINE[plain]) { const s = document.createElement('span'); s.className = 'ln'; s.innerHTML = LINE[plain]; s.setAttribute('aria-label', e); return s; }
   const img = new Image();
   img.className = 'emo'; img.alt = e; img.draggable = false; img.src = `assets/icons/${key(e)}.webp`;
-  img.onerror = () => img.replaceWith(e);   // unknown emoji: fall back to the system glyph
+  // unknown emoji: fall back to the system glyph, in a span the observer leaves alone (else it would loop)
+  img.onerror = () => { const t = document.createElement('span'); t.className = 'emo-txt'; t.textContent = e; img.replaceWith(t); };
   return img;
 }
 
 const SKIP = new Set(['SCRIPT', 'STYLE', 'TEXTAREA', 'TITLE']);
 function iconify(root) {
-  if (!root || SKIP.has(root.nodeName)) return;
+  if (!root || SKIP.has(root.nodeName) || root.classList?.contains('emo-txt')) return;
   const w = document.createTreeWalker(root, NodeFilter.SHOW_TEXT), hits = [];
-  for (let n; (n = w.nextNode());) if (!SKIP.has(n.parentNode.nodeName) && n.data.search(EMOJI) >= 0) hits.push(n);
+  for (let n; (n = w.nextNode());) if (!SKIP.has(n.parentNode.nodeName) && !n.parentNode.classList?.contains('emo-txt') && n.data.search(EMOJI) >= 0) hits.push(n);
   for (const n of hits) {
     const f = document.createDocumentFragment(); let last = 0;
     for (const m of n.data.matchAll(EMOJI)) { f.append(n.data.slice(last, m.index), icon(m[0])); last = m.index + m[0].length; }

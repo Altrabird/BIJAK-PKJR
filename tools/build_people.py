@@ -26,7 +26,8 @@ MAP = {
 }
 for s, S in (('l', 'L'), ('r', 'R')):
     MAP.update({
-        f'clavicle_{s}': (f'Shoulder.{S}', f'UpperArm.{S}'), f'upperarm_{s}': (f'UpperArm.{S}', f'LowerArm.{S}'),
+        # clavicle: copy its motion only; aligning to the source's upward-sloping shoulder bone made a permanent shrug
+        f'clavicle_{s}': (f'Shoulder.{S}', None), f'upperarm_{s}': (f'UpperArm.{S}', f'LowerArm.{S}'),
         f'lowerarm_{s}': (f'LowerArm.{S}', f'Palm.{S}'), f'hand_{s}': (f'Palm.{S}', None),
         f'thigh_{s}': (f'UpperLeg.{S}', f'LowerLeg.{S}'), f'calf_{s}': (f'LowerLeg.{S}', f'Foot.{S}'), f'foot_{s}': (f'Foot.{S}', None),
     })

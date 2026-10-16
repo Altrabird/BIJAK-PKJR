@@ -132,7 +132,7 @@ export function setDusk(t) {
 // fit: max footprint (m) for buildings; yaw: rotation so the model's front faces +Z.
 const MODEL_CFG = {
   car_hatchback: {}, car_wagon: {}, car_taxi: {}, car_police: {},   // these already face +Z
-  bicycle: { fit: 1.5, yaw: Math.PI }, kart: { fit: 1.7, yaw: Math.PI / 2 }, motorcycle: { fit: 1.85 }, bus: { fit: 9.2 }, ambulance: { fit: 5.6 },
+  bicycle: { fit: 1.5, yaw: Math.PI }, kart: { fit: 1.7, yaw: Math.PI / 2 }, motorcycle: { fit: 1.85 }, bus: { fit: 9.2 }, ambulance: { fit: 5.6 }, backpack: { fit: 0.32, yaw: Math.PI },
   house_a: { fit: 7.4 }, house_b: { fit: 7.8 }, house_c: { fit: 7.8 }, shop: { fit: 8.4 }, tower: { fit: 8.2 },
   palm: {}, tree_a: {}, tree_b: {}, tree_c: {}, streetlight: {},
   person_kid_m: { rig: true }, person_kid_f: { rig: true }, person_man: { rig: true }, person_woman: { rig: true },   // rigged people keep the raw glTF

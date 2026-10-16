@@ -2,7 +2,7 @@
 // Idle/Walk/Run baked from Quaternius clips), tinted per role, with code-driven pose overrides (look, signal, sit, pedal).
 import * as THREE from 'three';
 import { clone } from 'three/addons/utils/SkeletonUtils.js';
-import { E, mat } from './engine.js';
+import { E, mat, model } from './engine.js';
 
 export const SKINS = [0xf1c9a5, 0xd9a47a, 0xb87a4b, 0x8a5634];
 export const HAIRS = [0x1b1410, 0x3b2516, 0x6b4423];
@@ -16,12 +16,28 @@ const X = new THREE.Vector3(1, 0, 0), Y = new THREE.Vector3(0, 1, 0), Z = new TH
 const G = {
   helmet: new THREE.SphereGeometry(0.112, 18, 10, 0, Math.PI * 2, 0, Math.PI * 0.56),
   cap: new THREE.CylinderGeometry(0.1, 0.095, 0.06, 16), capTop: new THREE.CylinderGeometry(0.115, 0.115, 0.018, 16),
-  // open at the front (+Z) so the face shows
-  // set back from the skull centre so the face pokes out of the front
-  tudung: new THREE.SphereGeometry(0.088, 24, 16, 0, Math.PI * 2, 0, Math.PI * 0.78),
-  cape: new THREE.CylinderGeometry(0.068, 0.15, 0.12, 20, 1, true),
-  bag: new THREE.BoxGeometry(0.24, 0.28, 0.11),
+  tudung: hood(),
+  // the drape (labuh) falls from the neck over the shoulders and chest
+  drape: new THREE.LatheGeometry([[0.062, 0.12], [0.07, 0.07], [0.095, 0.03], [0.13, 0.0], [0.15, -0.04], [0.155, -0.11]].map(([r, y]) => new THREE.Vector2(r, y)), 32),
 };
+
+// tudung hood: a snug cap round the head with an oval opening for the face, closed under the chin
+function hood() {
+  const g = new THREE.SphereGeometry(0.1, 36, 28), p = g.attributes.position, idx = g.index.array, keep = [];
+  const inFace = k => {
+    const x = p.getX(k), y = p.getY(k), z = p.getZ(k), az = Math.atan2(x, z), el = Math.asin(y / 0.1);
+    return z > 0 && (az / 0.95) ** 2 + ((el + 0.25) / 0.82) ** 2 < 1;   // forehead to chin, cheek to cheek
+  };
+  for (let t = 0; t < idx.length; t += 3) if (!(inFace(idx[t]) && inFace(idx[t + 1]) && inFace(idx[t + 2]))) keep.push(idx[t], idx[t + 1], idx[t + 2]);
+  g.setIndex(keep);
+  // below the cheekbones the cloth wraps in under the jaw and round the neck instead of bulging
+  for (let k = 0; k < p.count; k++) {
+    const y = p.getY(k), t = Math.min(1, Math.max(0, (-y - 0.02) / 0.08)), f = 1 - 0.38 * t;
+    p.setXYZ(k, p.getX(k) * f, y, p.getZ(k) * (p.getZ(k) > 0 ? f * f : f));
+  }
+  g.computeVertexNormals();
+  return g;
+}
 
 // tinted copies of the model's own materials, shared between people. Cloth/hair textures are grey (AO/luminance)
 // so the colour is the tint; the skin texture is the lightest tone, so darker tones are a ratio of SKINS[0].
@@ -37,7 +53,7 @@ function paint(src, hex) {
   return paints[k];
 }
 
-// opts: jantina, skin, hair, shirt, pants, tudung, bag, dress, role ('murid'|'polis'|'pengawas'|'awam'), scale
+// opts: jantina, skin, hair, shirt, pants, tudung, tudungColor, bag, bagColor, role ('murid'|'polis'|'pengawas'|'awam'), scale
 export function makePerson(opts = {}) {
   const o = { jantina: 'lelaki', skin: SKINS[1], hair: HAIRS[0], role: 'murid', bag: true, ...opts };
   const uni = UNIFORM[o.jantina];
@@ -78,18 +94,21 @@ export function makePerson(opts = {}) {
     b.add(s); return s;
   };
   const hipY = B.legL.getWorldPosition(new THREE.Vector3()).y;
-  const headS = socket(B.head), torsoS = socket(B.torso);
+  const headS = socket(B.head), torsoS = socket(B.torso), neckS = socket(bone('neck_01'));
   // centre of the skull; accessories are sized for a 0.15 m head (kids' heads are relatively bigger than adults')
   const headLen = HEIGHT - B.head.getWorldPosition(new THREE.Vector3()).y;
   const top = new THREE.Group(); top.position.set(0, headLen * 0.5, 0.012); top.scale.setScalar(headLen / 0.15); headS.add(top);
 
   const m = (geo, color, x = 0, y = 0, z = 0) => { const k = new THREE.Mesh(geo, mat(color)); k.position.set(x, y, z); k.castShadow = true; return k; };
   if (o.tudung) {
-    const t = new THREE.Mesh(G.tudung, mat(0xffffff, { side: THREE.DoubleSide })); t.castShadow = true; t.position.z = -0.028; t.scale.set(1, 1.12, 1.12); top.add(t);
-    top.add(m(G.cape, 0xffffff, 0, -0.12, -0.012));
+    const col = o.tudungColor ?? 0xf6f6f2;   // school tudung is white
+    const t = new THREE.Mesh(G.tudung, mat(col)); t.castShadow = true; t.position.set(0, -0.01, -0.004); t.scale.set(0.92, 1.1, 1.04); top.add(t);
+    const cloth = mat(col, { side: THREE.DoubleSide });
+    // drape hangs from the neck, so it stays put when the head turns
+    const d = new THREE.Mesh(G.drape, cloth); d.castShadow = true; d.scale.set(1.15 * headLen / 0.15, headLen / 0.15, 0.82 * headLen / 0.15); d.position.z = -0.01; neckS.add(d);
   }
   if (o.role === 'polis') { top.add(m(G.cap, 0x1b2440, 0, 0.045, 0)); top.add(m(G.capTop, 0xffffff, 0, 0.08, 0.01)); }
-  if (o.bag && o.role === 'murid') torsoS.add(m(G.bag, 0x2c7be5, 0, 0.02, -0.15));
+  if (o.bag && o.role === 'murid') torsoS.add(backpack(o.bagColor ?? BAGS[(Math.random() * BAGS.length) | 0]));
   root.scale.setScalar(o.scale ?? (kid ? 1 : 1.3));
 
   const mixer = new THREE.AnimationMixer(model);
@@ -145,11 +164,27 @@ export function makePerson(opts = {}) {
   return P;
 }
 
+// school backpack (CC-BY model) in the pupil's colour: main panels take it, the trims a darker/lighter shade
+const BAGS = [0x1c5bb8, 0xd32f2f, 0x7b1fa2, 0x00897b, 0xec407a, 0x37474f, 0xf9a825];
+const bagPaints = {};
+function backpack(hex) {
+  const b = model('backpack'), c = new THREE.Color(hex);
+  const tone = { backpack_main: c, backpack_shade2: c.clone().multiplyScalar(0.55), backpack_shade3: c.clone().lerp(new THREE.Color(0xffffff), 0.25) };
+  b.traverse(k => {
+    const t = k.isMesh && tone[k.material.name];
+    if (t) k.material = bagPaints[k.material.name + hex] ??= new THREE.MeshLambertMaterial({ name: k.material.name, color: t });
+  });
+  b.scale.z = 0.6;                     // a slim school bag rather than a hiking pack
+  b.position.set(0, -0.2, -0.12);      // hangs on the back below the shoulder blades
+  return b;
+}
+
 export function randomCitizen() {
   const shirts = [0xe85d75, 0x4caf50, 0xff9800, 0x7e57c2, 0x26a69a, 0xf06292, 0x8d6e63];
   const f = Math.random() < 0.5;
   return makePerson({
-    jantina: f ? 'perempuan' : 'lelaki', role: 'awam', tudung: f && Math.random() < 0.7, bag: false, dress: Math.random() < 0.5,
+    jantina: f ? 'perempuan' : 'lelaki', role: 'awam', tudung: f && Math.random() < 0.7, bag: false,
+    tudungColor: [0xf6f6f2, 0x283593, 0xad1457, 0x00695c, 0x6d4c41, 0x212121, 0xf8bbd0][(Math.random() * 7) | 0],
     skin: SKINS[(Math.random() * 4) | 0], hair: HAIRS[(Math.random() * 3) | 0],
     shirt: shirts[(Math.random() * shirts.length) | 0], pants: [0x2d3142, 0x5d4037, 0x37474f][(Math.random() * 3) | 0],
   });

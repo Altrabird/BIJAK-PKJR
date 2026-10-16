@@ -24,6 +24,7 @@ img.emo { width: 1.3em; height: 1.3em; vertical-align: -0.28em; object-fit: cont
 .btn.amber { background: var(--amber); color: var(--ink); box-shadow: 0 4px 0 #b47d06; }
 .btn.ghost { background: #eef3fb; color: var(--ink); box-shadow: 0 4px 0 #c6d2e6; }
 .btn:disabled { opacity: .45; cursor: default; }
+.icon-btn.on { background: var(--amber); }
 .icon-btn { width: 46px; height: 46px; border-radius: 50%; background: var(--panel); box-shadow: var(--shadow); font-size: 22px; display: grid; place-items: center; color: var(--ink); }
 
 /* full screens */

@@ -24,13 +24,18 @@ the **CC-BY 3.0** ones are used under https://creativecommons.org/licenses/by/3.
 | motorcycle.glb | Vespa | Jasmine Roberts | CC-BY 3.0 | https://poly.pizza/m/blGLclvvdEM |
 | bus.glb | Schoolbus | Poly by Google | CC-BY 3.0 | https://poly.pizza/m/8xacyNqdJ3t |
 | ambulance.glb | Ambulance | Poly by Google | CC-BY 3.0 | https://poly.pizza/m/8NOFImgkI5N |
+| backpack.glb | Backpack | J-Toastie | CC-BY 3.0 | https://poly.pizza/m/N2wKlicUau |
 
 **People** (`person_kid_m`, `person_kid_f`, `person_man`, `person_woman`) were made with
 [MakeHuman / MPFB 2](https://static.makehumancommunity.org/mpfb.html) and its CC0 `makehuman_system_assets` pack
 (base mesh, young Asian skins, hair, eyebrows, eyes, `male_casualsuit03/06`, `shoes01/02`), so the models are CC0.
 Their Idle/Walk/Run animations are baked from Quaternius' CC0 "Man" (https://poly.pizza/m/HMnuH5geEG, kept as
 `tools/quaternius_man.glb`). `tools/build_people.py` rebuilds them in Blender. The game tints them into school
-uniforms, polis, pengawas and orang awam. Tudung, caps, helmets and school bags are generated in code.
+uniforms, polis, pengawas and orang awam. Tudung, caps and helmets are generated in code; school bags use the backpack model above.
+
+Surface textures in `assets/textures/` are **CC0** from [Poly Haven](https://polyhaven.com), resized to 512 px WebP
+(grass and pavement recoloured to the game's palette): `grass` ← Leafy Grass, `pavement` ← Brick Pavement 02,
+`brick` ← Brick 4.
 
 UI icons in `assets/icons/` are **Fluent Emoji 3D** © Microsoft, MIT licence
 (https://github.com/microsoft/fluentui-emoji), taken from the `@lobehub/fluent-emoji-3d` package.

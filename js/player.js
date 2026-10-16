@@ -32,7 +32,15 @@ export class Player {
     E.cam.follow = this.person.root;
     E.cam.want.copy(this.person.root.position); E.cam.target.copy(this.person.root.position);
     this.bindInput();
+    this.runLock = false; this.runHold = false;   // run button toggles, Shift runs while held
+    HUD.onRun(() => { this.runLock = !this.runLock; this.applySpeed(); });
+    this.applySpeed();
     this.refresh();
+  }
+  applySpeed() {
+    const run = this.runLock || this.runHold;
+    this.walker.speed = run ? 3.3 : 1.7;   // m/s: a brisk walk, or a child's run
+    HUD.setRun(run);
   }
 
   // ---------- scoring ----------
@@ -93,6 +101,7 @@ export class Player {
       if (e.target.tagName === 'INPUT') return;
       const k = e.key.toLowerCase(), down = e.type === 'keydown';
       this.keys[k] = down;
+      if (k === 'shift' && this.runHold !== down) { this.runHold = down; this.applySpeed(); }
       if (!down) return;
       if (this.walker.state === 'kerb' && HUD.kerb) {
         const map = { arrowleft: 'L', a: 'L', arrowright: 'R', d: 'R', ' ': 'G', enter: 'G', b: 'P', escape: 'X' };
@@ -110,7 +119,9 @@ export class Player {
   }
 
   walkTo(x, z) {
-    if (this.walker.state === 'kerb') { HUD.kerbClose(); this.walker.cleared = false; }
+    // clicking somewhere while waiting at the kerb means "cross now" (the drill is still judged: skipping it earns a saman);
+    // without this, every click walked straight back to the same kerb and the road could never be crossed
+    if (this.walker.state === 'kerb' && this.drill) this.kerbAct('G');
     if (this.walker.goTo(x, z)) { this.marker(x, z); sfx('click'); }
   }
   marker(x, z) {

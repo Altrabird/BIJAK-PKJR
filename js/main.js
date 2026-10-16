@@ -171,7 +171,7 @@ function credits() {
   modal(`<h2>ℹ️ Kredit</h2>
     <p><b>BIJAK PKJR</b>: permainan 3D Pendidikan Keselamatan Jalan Raya untuk murid sekolah rendah.</p>
     <p>Diilhamkan oleh <b>Pertandingan Lalu Lintas Shell</b> (Shell Traffic Games, Sarawak, 1963–2015) yang kini diteruskan sebagai Sarawak Traffic Games, dan modul PKJR (JKJR & KPM).</p>
-    <p>Model 3D CC0 dari Poly Pizza: Kenney, Quaternius, Kay Lousberg. Model CC-BY 3.0 dari Poly Pizza: basikal oleh jeremy, kart, bas sekolah dan ambulans oleh Poly by Google, skuter oleh Jasmine Roberts. Watak dibina dengan MakeHuman/MPFB (CC0). Ikon: Fluent Emoji 3D (MIT). Sekolah, papan tanda dan lampu isyarat dibina dalam kod. Enjin: three.js (MIT). Suara: TTS neural ms-MY.</p>
+    <p>Model 3D CC0 dari Poly Pizza: Kenney, Quaternius, Kay Lousberg. Model CC-BY 3.0 dari Poly Pizza: basikal oleh jeremy, kart, bas sekolah dan ambulans oleh Poly by Google, beg sekolah oleh J-Toastie. Tekstur rumput, kaki lima dan bata: Poly Haven (CC0), skuter oleh Jasmine Roberts. Watak dibina dengan MakeHuman/MPFB (CC0). Ikon: Fluent Emoji 3D (MIT). Sekolah, papan tanda dan lampu isyarat dibina dalam kod. Enjin: three.js (MIT). Suara: TTS neural ms-MY.</p>
     <p>Kawalan: klik tanah untuk berjalan · tahan klik kanan dan seret untuk pusing 360° dan condongkan kamera · roda tetikus untuk zum · Q/E putar · M peta · W/A/S/D tunggang · Z/C isyarat · H loceng.</p>`, [['Tutup', 'green']]);
 }
 
