@@ -111,7 +111,7 @@ button { font: inherit; cursor: pointer; border: 0; }
 .vctl { position: absolute; inset: auto 0 0 0; height: 0; }
 .joy { position: absolute; left: 22px; bottom: 22px; width: 140px; height: 140px; border-radius: 50%; background: rgba(255,255,255,.55); box-shadow: var(--shadow); touch-action: none; }
 .joy i { position: absolute; left: 45px; top: 45px; width: 50px; height: 50px; border-radius: 50%; background: var(--blue); }
-.vbtns { position: absolute; right: 70px; bottom: 22px; display: flex; gap: 10px; }
+.vbtns { position: absolute; right: 16px; bottom: 76px; display: flex; gap: 10px; }
 .vbtns .icon-btn { width: 60px; height: 60px; font-size: 26px; }
 .vbtns .icon-btn.on { background: var(--amber); }
 .speed { position: absolute; left: 50%; bottom: 16px; transform: translateX(-50%); background: var(--panel); border-radius: 999px; padding: 4px 14px; font-weight: 800; box-shadow: var(--shadow); }

@@ -111,10 +111,12 @@ export const HUD = {
   kerbClose() { if (this.kerb) { this.kerb.remove(); this.kerb = null; } },
 
   // ---- Sims-like choice card. options: {e, label, ok, rule, good, note} ----
-  choice(title, q, options) {
+  choice(title, q, opts) {
+    // shuffle so the safe answer is not always first
+    const options = opts.map(o => [Math.random(), o]).sort((a, b) => a[0] - b[0]).map(x => x[1]);
     return new Promise(res => {
       const s = screen(`<div class="card"><h2>${esc(title)}</h2><p>${esc(q)}</p><div class="choices">${options.map((o, i) =>
-        `<button class="choice" data-i="${i}"><span class="e">${o.e || '•'}</span><span>${esc(o.label)}</span></button>`).join('')}</div><div id="c-fb"></div></div>`);
+        `<button class="choice" data-i="${i}"${o.ok ? ' data-ok="1"' : ''}><span class="e">${o.e || '•'}</span><span>${esc(o.label)}</span></button>`).join('')}</div><div id="c-fb"></div></div>`);
       const btns = s.querySelectorAll('.choice');
       btns.forEach(b => b.onclick = () => {
         const o = options[+b.dataset.i];

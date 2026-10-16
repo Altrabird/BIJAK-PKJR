@@ -1,1 +1,1 @@
-{ "name": "bijak-pkjr", "private": true, "type": "module", "scripts": { "test": "node --test tests/" } }
+{ "name": "bijak-pkjr", "private": true, "type": "module", "scripts": { "test": "node --test tests/*.test.mjs" } }

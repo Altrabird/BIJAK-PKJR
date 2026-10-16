@@ -14,7 +14,7 @@ export function createGame(def, opts = {}) {
   const G = { map, opts, npcs: [], statics: [], hooks: [], t: 0, paused: false, bus: null };
   G.world = buildWorld(map);
   G.sig = new Signals(map);
-  G.traffic = new Traffic(map, G.sig, { vmax: opts.vmax ?? 8, bad: opts.bad ?? 0, kinds: opts.kinds });
+  G.traffic = new Traffic(map, G.sig, { vmax: opts.vmax ?? 8, bad: opts.bad ?? 0, kinds: opts.kinds, make: opts.make, half: opts.half });
   G.traffic.spawnRandom(opts.cars ?? 10);
   setDusk(opts.dusk || 0);
   G.world.setNight((opts.dusk || 0) > 0.5);

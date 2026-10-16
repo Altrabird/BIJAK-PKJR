@@ -72,9 +72,9 @@ export class Traffic {
   add(o) {
     const car = {
       id: NEXT_ID++, tile: o.tile, ent: o.ent, s: o.s || 0, v: 0,
-      vmax: o.vmax ?? this.opts.vmax * (0.85 + Math.random() * 0.3), half: o.half ?? 2.3,
+      vmax: o.vmax ?? this.opts.vmax * (0.85 + Math.random() * 0.3), half: o.half ?? this.opts.half ?? 2.3,
       bad: o.bad ?? (Math.random() < this.opts.bad), route: o.route || null, ri: 0,
-      mesh: o.mesh || makeCar(this.opts.kinds ? this.opts.kinds[(Math.random() * this.opts.kinds.length) | 0] : o.kind),
+      mesh: o.mesh || (this.opts.make ? this.opts.make() : makeCar(this.opts.kinds ? this.opts.kinds[(Math.random() * this.opts.kinds.length) | 0] : o.kind)),
       stopAt: null, wait: 0, stopped: {}, blockT: 0, arrived: false,
     };
     if (car.route) { car.ri = car.route.findIndex(t => t[0] === o.tile[0] && t[1] === o.tile[1]); }

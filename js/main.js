@@ -181,5 +181,5 @@ async function pauseMenu() {
   if (r === 0) { stopCurrent(); menu(); }
 }
 
-window.__bijak = { E, SAVE, say, lifeGame };   // handle for tests
+window.__bijak = { E, SAVE, say, lifeGame, current: () => current };   // handle for tests
 boot();

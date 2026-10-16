@@ -52,9 +52,10 @@ function setGoal(x, z, label) {
   g.position.set(x, 0, z);
   E.scene.add(g);
   goal = { g, x, z, ring };
+  if (G) G.goal = goal;
   return goal;
 }
-function clearGoal() { if (goal) { E.scene.remove(goal.g); goal = null; } }
+function clearGoal() { if (goal) { E.scene.remove(goal.g); goal = null; if (G) G.goal = null; } }
 
 const PLACE_NAMES = { sekolah: 'Sekolah', kedai: 'Kedai Runcit', surau: 'Surau', taman: 'Taman Permainan', rumahKawan: 'Rumah Kawan', hentianRumah: 'Perhentian Bas', rumah: 'Rumah' };
 

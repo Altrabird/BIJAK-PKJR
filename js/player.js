@@ -80,7 +80,7 @@ export class Player {
       this.downAt = [e.clientX, e.clientY];
     };
     this.onUp = e => {
-      if (e.button !== 0 || !this.downAt || this.mode !== 'walk' || this.G.paused) return;
+      if (e.button !== 0 || !this.downAt || this.mode !== 'walk' || this.G.paused || this.frozen) return;
       const moved = Math.hypot(e.clientX - this.downAt[0], e.clientY - this.downAt[1]); this.downAt = null;
       if (moved > 8) return;
       const h = pick(e.clientX, e.clientY, this.G.pickables || []);
