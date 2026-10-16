@@ -18,8 +18,18 @@ Credit is not required, but given with thanks:
 | palm.glb | Palm Tree | Quaternius | https://poly.pizza/m/A6cKJYFsIb |
 | tree.glb | Tree | Quaternius | https://poly.pizza/m/i4QMw4L64D |
 | streetlight.glb | Streetlight | Kay Lousberg | https://poly.pizza/m/vPFSLYh6sg |
+| person_m.glb | Man (rigged, animated) | Quaternius | https://poly.pizza/m/HMnuH5geEG |
+| person_f.glb | Woman Casual (rigged, animated) | Quaternius | https://poly.pizza/m/jpKRgGDxhk |
+| person_fd.glb | Woman in Dress (rigged, animated) | Quaternius | https://poly.pizza/m/zMyPlQXBzq |
 
-Everything else (murid and polis characters, school bus, bicycle, motorcycle, school, surau, road signs,
+People use the three Quaternius models above, recoloured in code into school uniforms, polis and pengawas.
+Tudung, caps, helmets and school bags are generated in code.
+
+UI icons in `assets/icons/` are **Fluent Emoji 3D** © Microsoft, MIT licence
+(https://github.com/microsoft/fluentui-emoji), taken from the `@lobehub/fluent-emoji-3d` package.
+Fetch any new ones with `node tools/fetch_icons.mjs`. The line icons in `js/icons.js` are from Lucide (ISC licence).
+
+Everything else (school bus, bicycle, motorcycle, school, surau, road signs,
 traffic lights, roads) is generated in code for this project.
 Three.js © three.js authors (MIT), vendored in `vendor/three/`.
 Voices: Microsoft Edge neural TTS, ms-MY (Yasmin, Osman), pre-rendered.

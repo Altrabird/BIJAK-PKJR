@@ -172,7 +172,7 @@ export class Player {
     v.add(body);
     this.vkind = kind;
     v.add(this.person.root);
-    this.person.root.position.set(0, kind === 'kart' ? 0.1 : 0.32, kind === 'kart' ? -0.15 : -0.32);
+    this.person.root.position.set(0, kind === 'kart' ? -0.16 : 0.32, kind === 'kart' ? -0.15 : -0.32);
     this.person.root.rotation.set(0, 0, 0);
     this.person.pose = kind === 'kart' ? 'sit' : 'pedal';
     this.person.setHelmet(this.helmet);

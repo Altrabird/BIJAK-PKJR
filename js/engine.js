@@ -130,6 +130,7 @@ const MODEL_CFG = {
   kart: { yaw: -Math.PI / 2 },
   house_a: { fit: 7.4 }, house_b: { fit: 7.8 }, house_c: { fit: 7.8 }, shop: { fit: 8.4 }, tower: { fit: 8.2 },
   palm: {}, tree: {}, streetlight: {},
+  person_m: { rig: true }, person_f: { rig: true }, person_fd: { rig: true },   // rigged people keep the raw glTF (scene + clips)
 };
 
 export async function loadModels(onProgress) {
@@ -137,7 +138,7 @@ export async function loadModels(onProgress) {
   let done = 0;
   await Promise.all(names.map(n => new Promise(res => {
     loader.load(`assets/models/${n}.glb`, g => {
-      E.models[n] = normalise(g.scene, MODEL_CFG[n]);
+      E.models[n] = MODEL_CFG[n].rig ? g : normalise(g.scene, MODEL_CFG[n]);
       onProgress && onProgress(++done / names.length); res();
     }, undefined, err => { console.warn('model gagal', n, err); E.models[n] = null; onProgress && onProgress(++done / names.length); res(); });
   })));

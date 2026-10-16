@@ -8,10 +8,12 @@ import { startMission, stopLife, missionPicker, lifeGame } from './life.js';
 import { SKINS, HAIRS, makePerson } from './people.js';
 import { SAVE, persist } from './save.js';
 import { sfx, unlockAudio, say } from './audio.js';
+import { watchIcons } from './icons.js';
 
 let attract = null, current = null;   // current: { stop() }
 
 async function boot() {
+  watchIcons(document.getElementById('ui'));
   const load = screen(`<div style="text-align:center"><h1 style="margin:0;font-size:48px">BIJAK <span style="color:#f6b31b">PKJR</span></h1><p>Memuatkan dunia…</p><div class="bar"><i id="ld"></i></div></div>`, '');
   load.id = 'loading';
   initEngine(document.getElementById('c'), SAVE.settings.quality);
