@@ -30,6 +30,28 @@ export const MISSIONS = [
     steps: ['Jelajah dengan selamat', 'Tekan 🚲 untuk berbasikal'] },
 ];
 
+// ---- Anugerah Murid Patuh Peraturan Jalan Raya: every scored mission at 90% Keselamatan or better ----
+const AWARD_PCT = 90;
+const SCORED = MISSIONS.filter(m => m.type !== 'free');
+// best Keselamatan %; saves from before scores were kept only have stars, and 3 stars means no saman (100%)
+export const missionScore = m => SAVE.score[m.id] ?? (SAVE.missions[m.id] === 3 ? 100 : 0);
+export const awardEarned = () => SCORED.every(m => missionScore(m) >= AWARD_PCT);
+
+export function awardSijil(murid) {
+  const avg = Math.round(SCORED.reduce((a, m) => a + missionScore(m), 0) / SCORED.length);
+  const date = new Date(SAVE.anugerah || Date.now()).toLocaleDateString('ms-MY', { day: 'numeric', month: 'long', year: 'numeric' });
+  return new Promise(res => {
+    const s = screen(`<div class="card" style="max-width:720px"><div class="sijil">
+      <small>BIJAK PKJR · Taman Bijak</small><h1>SIJIL ANUGERAH</h1><h2 style="margin:4px 0 10px">MURID PATUH PERATURAN JALAN RAYA</h2>
+      <p>Dengan ini disahkan bahawa</p><div class="nm">${esc(murid.nama)}</div>
+      <p>telah menamatkan <b>semua ${SCORED.length} misi</b> Pendidikan Keselamatan Jalan Raya dengan markah keselamatan <b>${AWARD_PCT}% ke atas</b></p>
+      <p><b>Purata markah keselamatan: ${avg}%</b></p><p>🏅</p><small>${date}</small></div>
+      <div class="row end" style="margin-top:14px"><button class="btn ghost" id="sj-x">Tutup</button><button class="btn green" id="sj-p">🖨️ Cetak</button></div></div>`);
+    s.querySelector('#sj-p').onclick = () => window.print();
+    s.querySelector('#sj-x').onclick = () => { sfx('click'); s.remove(); res(); };
+  });
+}
+
 export function missionUnlocked(i) { return i === 0 || !!SAVE.missions[MISSIONS[i - 1].id] || i === MISSIONS.length - 1 && !!SAVE.missions[MISSIONS[0].id]; }
 
 let G = null, goal = null;
@@ -90,8 +112,17 @@ export function startMission(idx, murid, onExit) {
     const gained = s.xp + 50 + stars * 20;
     SAVE.xp += gained;
     SAVE.missions[M.id] = Math.max(SAVE.missions[M.id] || 0, stars);
+    const wasAwarded = awardEarned();
+    SAVE.score[M.id] = Math.max(SAVE.score[M.id] || 0, s.safe);
+    if (!wasAwarded && awardEarned()) SAVE.anugerah = new Date().toISOString();
     persist();
     sfx('cheer'); say('misi_selesai');
+    if (!wasAwarded && SAVE.anugerah) {
+      // every mission now at 90% or better: the award, then the usual summary
+      const a = await modal(`<h2>🏅 Tahniah, ${esc(P.murid.nama)}!</h2><p style="text-align:center">Semua misi Taman Bijak selesai dengan markah keselamatan <b>${AWARD_PCT}% ke atas</b>.</p>
+        <p style="text-align:center;font-size:20px"><b>ANUGERAH MURID PATUH PERATURAN JALAN RAYA</b></p>`, [['Kemudian', 'ghost'], ['🖨️ Lihat Sijil', 'green']]);
+      if (a === 1) await awardSijil(P.murid);
+    }
     const hasNext = idx + 1 < MISSIONS.length;
     const r = await modal(`<h2>🎉 Misi Selesai: ${esc(M.title)}</h2>
       <div class="big-stars">${'★'.repeat(stars)}${'☆'.repeat(3 - stars)}</div>
@@ -317,9 +348,13 @@ export function missionPicker(murid, onStart, onBack) {
   const s = screen(`<div class="card"><h2>🏡 Taman Bijak</h2><p>Hai <b>${esc(murid.nama)}</b>! Pilih misi hari ini. ⭐ Mata Bijak: <b>${SAVE.xp}</b></p>
     <div class="missions">${MISSIONS.map((m, i) => {
       const st = SAVE.missions[m.id] || 0, un = missionUnlocked(i);
-      return `<button class="mission" data-i="${i}" ${un ? '' : 'disabled'}><span class="n">${un ? m.e : '🔒'}</span><span><b>${i + 1}. ${esc(m.title)}</b><small>${esc(m.desc)}</small></span><span class="stars">${m.type === 'free' ? '' : '★'.repeat(st) + '☆'.repeat(3 - st)}</span></button>`;
+      const pct = st ? `<small>${missionScore(m)}%</small>` : '';
+      return `<button class="mission" data-i="${i}" ${un ? '' : 'disabled'}><span class="n">${un ? m.e : '🔒'}</span><span><b>${i + 1}. ${esc(m.title)}</b><small>${esc(m.desc)}</small></span><span class="stars">${m.type === 'free' ? '' : '★'.repeat(st) + '☆'.repeat(3 - st) + pct}</span></button>`;
     }).join('')}</div>
-    <div class="row end" style="margin-top:12px"><button class="btn ghost" id="mp-back">◀ Menu</button></div></div>`);
+    <p id="mp-award">🏅 <b>Anugerah Murid Patuh Peraturan Jalan Raya</b>: ${awardEarned() ? 'DICAPAI!' : `${SCORED.filter(m => missionScore(m) >= AWARD_PCT).length}/${SCORED.length} misi dengan markah ${AWARD_PCT}% ke atas`}</p>
+    <div class="row end" style="margin-top:12px"><button class="btn ghost" id="mp-back">◀ Menu</button>${awardEarned() ? '<button class="btn green" id="mp-sijil">🏅 Sijil Anugerah</button>' : ''}</div></div>`);
   s.querySelectorAll('[data-i]').forEach(b => b.onclick = () => { sfx('click'); s.remove(); onStart(+b.dataset.i); });
+  const sj = s.querySelector('#mp-sijil');
+  if (sj) sj.onclick = () => { sfx('click'); if (!SAVE.anugerah) { SAVE.anugerah = new Date().toISOString(); persist(); } awardSijil(murid); };
   s.querySelector('#mp-back').onclick = () => { sfx('click'); s.remove(); onBack(); };
 }

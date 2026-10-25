@@ -22,6 +22,7 @@ ambulance comes to take them away. If it is you, the mission ends with an explan
 
 ## Controls
 - **Walk:** W/A/S/D (or arrows, or the joystick on touch screens) walks freely anywhere, roads included; or click/tap the ground. 🏃 or hold Shift to run. Stop at a kerb facing the road and the kerb drill opens: ← kiri, → kanan, Space lintas, B pelican button. Stepping onto the road without it, off a crossing or on a red man earns a saman.
+- **Anugerah:** finish every Taman Bijak mission with 90% Keselamatan or better to earn the printable *Sijil Anugerah Murid Patuh Peraturan Jalan Raya* (also in the mission menu).
 - **Polis:** officers stand at junctions, walk the pavements, ride patrol bikes and drive patrol cars. Break a rule and the nearest one comes after you and stops you; drivers who break the law are pulled over too.
 - **Ride:** W/A/S/D or the on-screen joystick. Z / C give left / right signals, H rings the bell.
 - **Camera:** hold right-click and drag (or two fingers) to look all the way round and tilt, mouse wheel or pinch to zoom, Q/E to turn 45°.
@@ -57,6 +58,9 @@ python tests/e2e_bina.py
 ```
 ```bash
 python tests/e2e_police.py
+```
+```bash
+python tests/e2e_anugerah.py
 ```
 
 `e2e_missions.py` takes a mission number from 0 to 6. Screenshots go to `tests/shots/`.
