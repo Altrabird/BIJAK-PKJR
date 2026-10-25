@@ -24,7 +24,7 @@ with sync_playwright() as p:
     pg.click(f'.mission[data-i="{mission}"]'); time.sleep(2.5)
     pg.screenshot(path=os.path.join(OUT, f'm{mission}_0.png'))
     lastgoal = None; n = 0; rode = 0; shots = 1
-    for k in range(400):
+    for k in range(700):   # software-rendered Chromium runs the busier town at ~6 fps
         time.sleep(0.5)
         st = pg.evaluate(JS_STATE)
         if st is None: print('no game'); break
@@ -36,7 +36,7 @@ with sync_playwright() as p:
             pg.click('#c-go'); continue
         if st['kerb']:
             for a in ['ArrowRight', 'ArrowLeft', 'ArrowRight']: pg.keyboard.press(a); time.sleep(0.2)
-            for w in range(80):
+            for w in range(240):
                 ok = pg.evaluate("(() => { const G = __bijak.lifeGame(); const w = G.player.walker; const c = w.kerb ? w.kerb.cross : -1; if (c >= 0) { const cr = G.map.crossings[c]; if (cr.type === 'pelican') G.sig.press(c); if (cr.type !== 'zebra') return G.sig.pedGreen(c) && !G.sig.pedFlash(c); } const bus = G.bus; if (bus && !bus.gone) return false; return !G.traffic.cars.some(k => k.v > 1 && Math.hypot(k.x - w.x, k.z - w.z) < 14); })()")
                 if ok: break
                 time.sleep(0.5)

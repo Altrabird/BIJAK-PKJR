@@ -132,6 +132,8 @@ export function setDusk(t) {
 // fit: max footprint (m) for buildings; yaw: rotation so the model's front faces +Z.
 const MODEL_CFG = {
   car_hatchback: {}, car_wagon: {}, car_taxi: {}, car_police: {},   // these already face +Z
+  suv: { fit: 4.5 }, pickup: { fit: 5.2 }, van: { fit: 4.8 }, car_old: { fit: 4.4, yaw: Math.PI }, truck_old: { fit: 5.4, yaw: -Math.PI / 2 },
+  lorry: { fit: 7.2, sx: 0.7 }, dump_truck: { fit: 7.2, yaw: Math.PI, sx: 0.62 }, tractor: { fit: 3.6 }, motorbike: { fit: 2.1, yaw: -Math.PI / 2 },
   bicycle: { fit: 1.5, yaw: Math.PI }, kart: { fit: 1.7, yaw: Math.PI / 2 }, motorcycle: { fit: 1.85 }, bus: { fit: 9.2 }, ambulance: { fit: 5.6 }, backpack: { fit: 0.32, yaw: Math.PI },
   house_a: { fit: 7.4 }, house_b: { fit: 7.8 }, house_c: { fit: 7.8 }, shop: { fit: 8.4 }, tower: { fit: 8.2 },
   palm: {}, tree_a: {}, tree_b: {}, tree_c: {}, streetlight: {},
@@ -157,7 +159,9 @@ function normalise(root, cfg) {
   let box = new THREE.Box3().setFromObject(wrap);
   if (cfg.fit) {
     const s = cfg.fit / Math.max(box.max.x - box.min.x, box.max.z - box.min.z);
-    root.scale.multiplyScalar(s); wrap.updateMatrixWorld(true);
+    root.scale.multiplyScalar(s);
+    if (cfg.sx) root.scale.x *= cfg.sx;   // chunky low-poly trucks are wider than a 3.5 m lane allows
+    wrap.updateMatrixWorld(true);
     box = new THREE.Box3().setFromObject(wrap);
   }
   const c = box.getCenter(new THREE.Vector3());

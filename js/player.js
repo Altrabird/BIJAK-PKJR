@@ -20,6 +20,7 @@ export class Player {
     this.person = makePerson({ ...this.murid, role: 'murid' });
     const [sx, sz] = G.map.center(...G.map.spawn);
     this.walker = new Walker(G.map, this.person, sx, sz, 1.7);
+    this.walker.roadCost = 4;      // clicks route fairly directly; crossing in the wrong place is judged, not prevented
     this.mode = 'walk';            // walk | ride | passenger | frozen | injured
     this.stats = { safe: 100, xp: 0, saman: 0, log: [], good: [] };
     this.cool = {};
@@ -36,7 +37,10 @@ export class Player {
     HUD.onRun(() => { this.runLock = !this.runLock; this.applySpeed(); });
     this.applySpeed();
     this.refresh();
+    this.walkPad();
   }
+  // touch screens get a joystick for walking too (keyboard: W A S D / arrows)
+  walkPad() { if (matchMedia('(pointer: coarse)').matches) HUD.vctlOpen({ joy: (x, y) => { this.input.x = x; this.input.y = y; } }); else HUD.vctlClose(); }
   applySpeed() {
     const run = this.runLock || this.runHold;
     this.walker.speed = run ? 3.3 : 1.7;   // m/s: a brisk walk, or a child's run
@@ -54,6 +58,7 @@ export class Player {
     this.stats.log.push(id);
     if (!quiet) HUD.slip(id, extra);
     this.G.onOffence && this.G.onOffence(id);
+    if (!quiet && id !== 'DILANGGAR') this.G.alarm?.(id);   // patrolling polis come after the murid
     this.refresh();
   }
   good(id, quiet) {
@@ -78,6 +83,7 @@ export class Player {
     if (this.mode !== 'walk') return null;
     const w = this.walker, c = this.map.cellAt(w.x, w.z);
     if (onRoadCell(c) || w.state === 'kerb') return { x: w.x, z: w.z, kind: 'ped', waiting: w.state === 'kerb' && !onRoadCell(c), cross: w.kerb?.cross, ref: this };
+    if (this.kerbManual) return { x: w.x, z: w.z, kind: 'ped', waiting: true, cross: this.drill?.cross, ref: this };
     return null;
   }
 
@@ -103,9 +109,10 @@ export class Player {
       this.keys[k] = down;
       if (k === 'shift' && this.runHold !== down) { this.runHold = down; this.applySpeed(); }
       if (!down) return;
-      if (this.walker.state === 'kerb' && HUD.kerb) {
+      if (HUD.kerb && (this.walker.state === 'kerb' || this.kerbManual)) {
         const map = { arrowleft: 'L', a: 'L', arrowright: 'R', d: 'R', ' ': 'G', enter: 'G', b: 'P', escape: 'X' };
-        if (map[k]) { e.preventDefault(); this.kerbAct(map[k]); }
+        // walking with the keys, A/D still move; the arrows look
+        if (map[k] && !(this.kerbManual && (k === 'a' || k === 'd'))) { e.preventDefault(); this.kerbAct(map[k]); }
       }
       if (this.mode === 'ride') {
         if (k === 'z') this.setSignal('L');
@@ -113,6 +120,8 @@ export class Player {
         if (k === 'h') this.setSignal('bell');
       }
     };
+    this.onBlur = () => { this.keys = {}; };
+    addEventListener('blur', this.onBlur);
     cv.addEventListener('pointerdown', this.onDown);
     cv.addEventListener('pointerup', this.onUp);
     addEventListener('keydown', this.onKey); addEventListener('keyup', this.onKey);
@@ -155,21 +164,34 @@ export class Player {
       if (this.G.sig.press(cr.id)) { sfx('beep'); say('tekan_butang'); }
     } else if (a === 'X') {
       HUD.kerbClose(); this.walker.stop(); this.drill = null; this.person.head.rotation.y = 0;
+      if (this.kerbManual) { this.kerbManual = false; this.kerbDismissed = true; }
     } else if (a === 'G') {
       HUD.kerbClose();
-      if (d.n < 3) this.offence('TIADA_KERB_DRILL'); else this.good('KERB_OK');
-      if (cr && cr.type !== 'zebra') {
-        if (!this.G.sig.pedGreen(cr.id)) this.offence('LINTAS_MERAH');
-        else if (d.waitedRed) this.good('TUNGGU_HIJAU');
-      }
-      if (!cr) {
-        const near = this.map.crossings.some(c => Math.hypot(c.x - this.walker.x, c.z - this.walker.z) < 45);
-        if (near) this.offence('LINTAS_BUKAN_TEMPAT');
-      } else if (cr.type === 'zebra') this.good('GUNA_LINTASAN');
-      this.checkBus();
-      this.drill = null; this.person.head.rotation.y = 0;
-      this.walker.proceed();
+      this.judgeCross(d);
+      if (this.kerbManual) {
+        // walk straight across to the far pavement
+        const w = this.walker, dx = Math.sin(w.yaw), dz = Math.cos(w.yaw);
+        let to = null;
+        for (let r = 1.5; r < 16 && !to; r += 0.5) if (!onRoadCell(this.map.cellAt(w.x + dx * r, w.z + dz * r))) to = [w.x + dx * (r + 0.6), w.z + dz * (r + 0.6)];
+        this.kerbManual = false; this.kerbDismissed = true;
+        if (to && w.goTo(...to)) w.cleared = true;
+      } else this.walker.proceed();
     }
+  }
+  // the moment the murid steps off the kerb: was the drill done, the light green, the place a crossing?
+  judgeCross(d) {
+    const cr = d.cross >= 0 ? this.map.crossings[d.cross] : null;
+    if (d.n < 3) this.offence('TIADA_KERB_DRILL'); else this.good('KERB_OK');
+    if (cr && cr.type !== 'zebra') {
+      if (!this.G.sig.pedGreen(cr.id)) this.offence('LINTAS_MERAH');
+      else if (d.waitedRed) this.good('TUNGGU_HIJAU');
+    }
+    if (!cr) {
+      const near = this.map.crossings.some(c => Math.hypot(c.x - this.walker.x, c.z - this.walker.z) < 45);
+      if (near) this.offence('LINTAS_BUKAN_TEMPAT');
+    } else if (cr.type === 'zebra') this.good('GUNA_LINTASAN');
+    this.checkBus();
+    this.drill = null; this.person.head.rotation.y = 0;
   }
   checkBus() {
     const b = this.G.bus;
@@ -194,7 +216,7 @@ export class Player {
     v.rotation.y = this.yaw;
     E.scene.add(v);
     this.speed = 0; this.vmax = kind === 'kart' ? 4.4 : 5.6;
-    this.mode = 'ride';
+    this.mode = 'ride'; this.walker.drive = null; this.kerbManual = false;
     this.ride = { tile: this.map.tileAt(v.position.x, v.position.z), wrongT: 0, sideT: 0, lastStop: -99, lastStopPos: [0, 0], junc: null, warned: false, onCross: -1 };
     E.cam.follow = v;
     HUD.vctlOpen({ joy: (x, y) => { this.input.x = x; this.input.y = y; }, signal: s => this.setSignal(s) });
@@ -211,7 +233,7 @@ export class Player {
     this.walker.place(x, z);
     this.mode = 'walk';
     E.cam.follow = this.person.root;
-    HUD.vctlClose();
+    this.input.x = this.input.y = 0; this.walkPad();
   }
   setSignal(s) {
     if (s === 'bell') { sfx('bell'); return; }
@@ -321,7 +343,7 @@ export class Player {
   }
 
   // ---------- struck by a car (incidents.js animates the fall and sends the ambulance) ----------
-  injure() { this.walker.stop(); this.drill = null; HUD.kerbClose(); this.mode = 'injured'; this.offence('DILANGGAR'); }
+  injure() { this.walker.stop(); this.walker.drive = null; this.kerbManual = false; this.drill = null; HUD.kerbClose(); this.mode = 'injured'; this.offence('DILANGGAR'); }
   recover(x, z) {
     this.person.root.rotation.set(0, 0, 0); this.person.root.visible = true;
     this.walker.place(x, z); this.mode = 'walk'; this.injured = false;
@@ -329,7 +351,7 @@ export class Player {
 
   // ---------- passenger ----------
   board(vehicleMesh) {
-    this.walker.stop(); HUD.kerbClose();
+    this.walker.stop(); this.walker.drive = null; this.kerbManual = false; HUD.kerbClose();
     this.mode = 'passenger';
     this.person.root.visible = false;
     E.cam.follow = vehicleMesh;
@@ -341,16 +363,59 @@ export class Player {
     E.cam.follow = this.person.root;
   }
 
+  // ---------- direct control (keys / joystick), relative to the camera ----------
+  steer(dt) {
+    const w = this.walker, k = this.keys, look = !!HUD.kerb;   // with the kerb panel open the arrows look left/right
+    const ix = (k.d || (!look && k.arrowright) ? 1 : 0) - (k.a || (!look && k.arrowleft) ? 1 : 0) + this.input.x;
+    const iy = (k.s || k.arrowdown ? 1 : 0) - (k.w || k.arrowup ? 1 : 0) + this.input.y;
+    // at a click-route kerb stop A/D are the look keys
+    const still = Math.hypot(ix, iy) < 0.15 || (w.state === 'kerb' && !k.w && !k.s && !k.arrowup && !k.arrowdown && !this.input.x && !this.input.y);
+    if (this.G.paused || this.frozen || still) {
+      w.drive = null;
+      // standing still at the kerb facing the road: offer the kerb drill
+      const ahead = r => onRoadCell(this.map.cellAt(w.x + Math.sin(w.yaw) * r, w.z + Math.cos(w.yaw) * r));
+      if (w.state === 'idle' && !this.drill && !this.kerbDismissed && !this.frozen && !onRoadCell(this.map.cellAt(w.x, w.z)) && (ahead(0.7) || ahead(1.3))) {
+        if ((this.kerbIdle = (this.kerbIdle || 0) + dt) > 0.5) {
+          let cross = -1;
+          for (let r = 1; r < 4 && cross < 0; r += 0.5) cross = this.map.crossAt(w.x + Math.sin(w.yaw) * r, w.z + Math.cos(w.yaw) * r);
+          this.kerbManual = true; this.kerbAt = [w.x, w.z];
+          this.kerbStart(w, { cross });
+        }
+      } else this.kerbIdle = 0;
+      return;
+    }
+    // moving by hand cancels a click route or a click-route kerb stop
+    if (w.state === 'kerb') { HUD.kerbClose(); this.drill = null; this.person.head.rotation.y = 0; }
+    if (w.state !== 'idle') w.stop();
+    const yaw = E.cam.yaw, fx = -Math.sin(yaw), fz = -Math.cos(yaw), rx = Math.cos(yaw), rz = -Math.sin(yaw);
+    const mx = rx * ix - fx * iy, mz = rz * ix - fz * iy, ml = Math.hypot(mx, mz);
+    w.drive = [mx / ml, mz / ml];
+    this.kerbDismissed = false; this.kerbIdle = 0;
+    // walked away from the kerb without crossing
+    if (this.kerbManual && Math.hypot(w.x - this.kerbAt[0], w.z - this.kerbAt[1]) > 2.5) { HUD.kerbClose(); this.kerbManual = false; this.drill = null; this.person.head.rotation.y = 0; }
+  }
+  // stepped off the kerb by hand: judge it like pressing "Lintas" (with whatever drill was done)
+  stepOnRoad() {
+    const w = this.walker, [dx, dz] = w.drive, d = this.drill || { n: 0, waitedRed: false };
+    d.cross = -1;
+    for (let r = 0; r < 3 && d.cross < 0; r += 0.5) d.cross = this.map.crossAt(w.x + dx * r, w.z + dz * r);
+    HUD.kerbClose(); this.kerbManual = false;
+    this.judgeCross(d);
+    w.cleared = true;
+  }
+
   // ---------- frame ----------
   update(dt) {
     if (this.mode === 'walk') {
       const w = this.walker, before = this.map.cellAt(w.x, w.z);
+      this.steer(dt);
       w.update(dt, {
         kerb: (ww, k, t) => t === 0 ? this.kerbStart(ww, k) : false,
         arrive: () => this.G.onArrive && this.G.onArrive(),
         crossed: () => this.G.onCrossed && this.G.onCrossed(),
       });
       const after = this.map.cellAt(w.x, w.z);
+      if (w.drive && !onRoadCell(before) && onRoadCell(after)) this.stepOnRoad();
       if (!onRoadCell(before) && onRoadCell(after) && !w.cleared) this.checkBus();
       // standing in the middle of the road
       this.roadT = after === CELL.ROAD ? (this.roadT || 0) + dt : 0;
@@ -393,7 +458,7 @@ export class Player {
   dispose() {
     const cv = E.renderer.domElement;
     cv.removeEventListener('pointerdown', this.onDown); cv.removeEventListener('pointerup', this.onUp);
-    removeEventListener('keydown', this.onKey); removeEventListener('keyup', this.onKey);
+    removeEventListener('keydown', this.onKey); removeEventListener('keyup', this.onKey); removeEventListener('blur', this.onBlur);
     if (this.veh) E.scene.remove(this.veh);
     if (this.mk) E.scene.remove(this.mk);
     E.scene.remove(this.plumbob);

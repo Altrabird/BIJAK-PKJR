@@ -81,8 +81,9 @@ export function addIncidents(G) {
 
   traffic.onViolation = (car, why) => {
     if (police || car.temp || !WHY[why]) return;
+    // the nearest patrol car or bike goes after them; otherwise a car is sent from out of sight
     const st = spawnTile(map, car.tile);
-    police = st && dispatch(G, st, car.tile, makePolice(), { half: 2.3 });
+    police = G.patrol?.take(car.x, car.z) || (st && dispatch(G, st, car.tile, makePolice(), { half: 2.3 }));
     if (!police) return;
     traffic.chase(police, car);
     HUD.toast(`Polis mengejar pemandu yang ${WHY[why]}!`, 'warn');

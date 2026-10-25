@@ -63,7 +63,7 @@ const PLACE_NAMES = { sekolah: 'Sekolah', kedai: 'Kedai Runcit', surau: 'Surau',
 export function startMission(idx, murid, onExit) {
   stopLife();
   const M = MISSIONS[idx], easy = SAVE.settings.tahap === 1;
-  G = createGame(TOWN, { cars: easy ? 9 : 14, npcs: 12, bad: easy ? 0 : 0.12, dusk: M.dusk || 0, murid });
+  G = createGame(TOWN, { cars: (easy ? 12 : 20) - (E.hi ? 0 : 6), npcs: 12, bad: easy ? 0 : 0.12, dusk: M.dusk || 0, murid });
   const P = G.player, map = G.map;
   P.easy = easy;
   const home = doorPoint(map, map.places[M.from]);

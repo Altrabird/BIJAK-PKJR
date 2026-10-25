@@ -29,7 +29,7 @@ async function boot() {
 // slowly orbiting live town behind the menus
 function startAttract() {
   if (attract) return;
-  attract = createGame(TOWN, { cars: 16, npcs: 14, bad: 0.05, staff: true });
+  attract = createGame(TOWN, { cars: E.hi ? 22 : 16, npcs: 14, bad: 0.05, staff: true });
   attract.player.mode = 'frozen';
   attract.player.person.root.visible = false;
   E.cam.follow = null; E.cam.want.set(0, 0, 0); E.cam.distWant = 105; E.cam.pitch = 0.75;
@@ -172,7 +172,7 @@ function credits() {
     <p><b>BIJAK PKJR</b>: permainan 3D Pendidikan Keselamatan Jalan Raya untuk murid sekolah rendah.</p>
     <p>Diilhamkan oleh <b>Pertandingan Lalu Lintas Shell</b> (Shell Traffic Games, Sarawak, 1963–2015) yang kini diteruskan sebagai Sarawak Traffic Games, dan modul PKJR (JKJR & KPM).</p>
     <p>Model 3D CC0 dari Poly Pizza: Kenney, Quaternius, Kay Lousberg. Model CC-BY 3.0 dari Poly Pizza: basikal oleh jeremy, kart, bas sekolah dan ambulans oleh Poly by Google, beg sekolah oleh J-Toastie. Tekstur rumput, kaki lima dan bata: Poly Haven (CC0), skuter oleh Jasmine Roberts. Watak dibina dengan MakeHuman/MPFB (CC0). Ikon: Fluent Emoji 3D (MIT). Sekolah, papan tanda dan lampu isyarat dibina dalam kod. Enjin: three.js (MIT). Suara: TTS neural ms-MY.</p>
-    <p>Kawalan: klik tanah untuk berjalan · tahan klik kanan dan seret untuk pusing 360° dan condongkan kamera · roda tetikus untuk zum · Q/E putar · M peta · W/A/S/D tunggang · Z/C isyarat · H loceng.</p>`, [['Tutup', 'green']]);
+    <p>Kawalan: W/A/S/D atau klik tanah untuk berjalan · tahan klik kanan dan seret untuk pusing 360° dan condongkan kamera · roda tetikus untuk zum · Q/E putar · M peta · W/A/S/D tunggang · Z/C isyarat · H loceng.</p>`, [['Tutup', 'green']]);
 }
 
 async function pauseMenu() {

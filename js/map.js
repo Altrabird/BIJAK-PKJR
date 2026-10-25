@@ -237,7 +237,8 @@ export function sideBetween(a, b) { return sideOf([b[0] - a[0], b[1] - a[1]]); }
 // ---------- A* on the walk grid ----------
 const COST = [1, 40, 1, Infinity, 1.2];
 
-export function findPath(map, from, to) {
+// roadCost: how much a pedestrian avoids walking on the road (NPCs keep to crossings; the player may choose to jaywalk)
+export function findPath(map, from, to, roadCost = COST[CELL.ROAD]) {
   const { gw, gh, cell } = map;
   const sx = Math.floor(from[0] + gw / 2), sz = Math.floor(from[1] + gh / 2);
   let tx = Math.floor(to[0] + gw / 2), tz = Math.floor(to[1] + gh / 2);
@@ -267,7 +268,7 @@ export function findPath(map, from, to) {
       if (!dx && !dz) continue;
       const nx = cx + dx, nz = cz + dz;
       if (!inb(nx, nz)) continue;
-      const n = nz * gw + nx, c = COST[cell[n]];
+      const n = nz * gw + nx, c = cell[n] === CELL.ROAD ? roadCost : COST[cell[n]];
       if (c === Infinity) continue;
       if (dx && dz && (cell[cz * gw + nx] === CELL.BLOCK || cell[nz * gw + cx] === CELL.BLOCK)) continue;
       const ng = g[cur] + c * (dx && dz ? 1.4142 : 1);

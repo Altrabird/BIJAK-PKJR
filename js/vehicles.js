@@ -1,6 +1,7 @@
 // Vehicles. Every vehicle group faces +Z. All bodies are GLB models (assets/CREDITS.md); lights are added in code.
 import * as THREE from 'three';
 import { model, mat } from './engine.js';
+import { makePerson, randomCitizen } from './people.js';
 
 const CARS = ['car_hatchback', 'car_wagon', 'car_taxi', 'car_hatchback', 'car_wagon'];
 const lightGeo = new THREE.BoxGeometry(0.35, 0.18, 0.05);
@@ -14,12 +15,42 @@ function addLights(g, halfLen, y, halfW) {
   }
   g.add(L);
 }
-export function setLights(v, on) { const l = v.getObjectByName('lights'); if (l) l.visible = on; }
+export function setLights(v, on) { const l = v.getObjectByName('lights'); if (l) l.visible = !!on; }   // three.js only hides visible === false
 
 export function makeCar(kind) {
-  const g = new THREE.Group();
-  g.add(model(kind || CARS[(Math.random() * CARS.length) | 0]));
-  addLights(g, 2.12, 0.65, 0.62);
+  const g = new THREE.Group(), m = model(kind || CARS[(Math.random() * CARS.length) | 0]);
+  g.add(m);
+  const { x: W, y: H, z: L } = size(m);
+  addLights(g, L / 2 + 0.02, Math.min(0.65, H * 0.4), W * 0.3);
+  return g;
+}
+
+// Town traffic mix: weight, top speed range (m/s), half length (m). Slow lorries and tractors make queues, bikes weave fast.
+export const TRAFFIC = {
+  car_hatchback: { w: 5, v: [7.5, 10], half: 2.0 }, car_wagon: { w: 4, v: [7, 9.5], half: 2.1 }, car_taxi: { w: 2, v: [8, 10.5], half: 2.0 },
+  suv: { w: 3, v: [7.5, 10], half: 2.3 }, car_old: { w: 2, v: [5, 6.5], half: 2.2 }, pickup: { w: 2, v: [7, 9], half: 2.6 },
+  van: { w: 2, v: [6.5, 8.5], half: 2.4 }, lorry: { w: 2, v: [5, 6.5], half: 3.6 }, truck_old: { w: 1, v: [4.5, 5.8], half: 2.7 },
+  dump_truck: { w: 1, v: [4.5, 5.5], half: 3.6 }, tractor: { w: 1, v: [2.6, 3.4], half: 1.8 },
+  motorbike: { w: 3, v: [9, 12], half: 1.1, rider: true }, motorcycle: { w: 3, v: [8, 11], half: 1.0, rider: true },
+  bicycle: { w: 2, v: [3.5, 4.8], half: 0.8, rider: true },
+};
+export function randomKind() {
+  let r = Math.random() * Object.values(TRAFFIC).reduce((a, t) => a + t.w, 0);
+  for (const k in TRAFFIC) if ((r -= TRAFFIC[k].w) < 0) return k;
+  return 'car_hatchback';
+}
+
+// two-wheelers in traffic carry a rider (polis on the patrol bike)
+export function makeRidden(kind, polis) {
+  const g = kind === 'bicycle' ? makeBicycle([0x1e88e5, 0x43a047, 0x212121, 0xe53935][(Math.random() * 4) | 0]) : kind === 'motorcycle' ? makeMotorcycle() : makeCar(kind);
+  const p = polis ? makePerson({ role: 'polis', jantina: 'lelaki', bag: false }) : randomCitizen();
+  p.pose = kind === 'bicycle' ? 'pedal' : 'sit';
+  p.setHelmet(kind !== 'bicycle' || Math.random() < 0.6);
+  p.root.position.set(...(kind === 'bicycle' ? SEATS.bike : kind === 'motorbike' ? [0, 0.05, -0.15] : SEATS.rider));
+  p.animate(0, 0);
+  g.add(p.root);
+  g.userData.rider = p;
+  if (polis) addBeacon(g, 1.75, [0xff2020, 0x2060ff]);
   return g;
 }
 

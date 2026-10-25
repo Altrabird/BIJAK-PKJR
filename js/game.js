@@ -9,8 +9,9 @@ import { Player } from './player.js';
 import { sfx } from './audio.js';
 import { addIncidents } from './incidents.js';
 import { makeMinimap } from './minimap.js';
+import { addPolice } from './police.js';
 
-// opts: cars, npcs, vmax, bad, kinds, dusk, murid, staff (pengawas/polis)
+// opts: cars, npcs, vmax, bad, kinds, dusk, murid, staff (pengawas/polis), police (patrol units; off in the traffic garden)
 export function createGame(def, opts = {}) {
   const map = parseMap(def);
   const G = { map, opts, npcs: [], statics: [], hooks: [], t: 0, paused: false, bus: null };
@@ -37,6 +38,7 @@ export function createGame(def, opts = {}) {
     G.npcs.push(w);
   }
   if (opts.staff !== false) addStaff(G);
+  G.patrol = (opts.police ?? !opts.make) ? addPolice(G) : null;
 
   G.player = new Player(G, opts.murid);
   G.traffic.onNearMiss = (o) => {
@@ -84,6 +86,7 @@ export function createGame(def, opts = {}) {
     for (const s of G.statics) if (s.obstacle) obs.push(s.obstacle);
     G.traffic.update(dt, obs);
     G.incidents.update(dt);
+    G.patrol?.update(dt);
     for (const w of G.npcs) {
       if (w.injured) continue;
       if (w.state === 'idle') {
@@ -113,7 +116,7 @@ export function createGame(def, opts = {}) {
   return G;
 }
 
-// pengawas lalu lintas at zebras next to a school, polis trafik at signalised junctions
+// pengawas lalu lintas at zebras next to a school, polis trafik at signalised and BERHENTI junctions
 function addStaff(G) {
   const map = G.map;
   for (const cr of map.crossings) {
@@ -127,7 +130,7 @@ function addStaff(G) {
       G.statics.push({ root: p.root, update: dt => { p.pose = G.npcs.some(w => w.state === 'kerb' && w.kerb && w.kerb.cross === cr.id) || (G.player.walker.state === 'kerb' && G.player.walker.kerb?.cross === cr.id) ? 'stop' : 'stand'; p.animate(dt, 0); } });
     }
   }
-  for (let j = 0; j < map.H; j++) for (let i = 0; i < map.W; i++) if (map.at(i, j) === 'L') {
+  for (let j = 0; j < map.H; j++) for (let i = 0; i < map.W; i++) if ('Lx'.includes(map.at(i, j))) {
     const p = makePerson({ role: 'polis', jantina: 'lelaki', skin: 0xd9a47a });
     const [cx, cz] = map.center(i, j);
     p.root.position.set(cx + 4.6, 0.15, cz + 4.6); p.root.rotation.y = -Math.PI * 0.75;

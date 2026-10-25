@@ -25,6 +25,15 @@ the **CC-BY 3.0** ones are used under https://creativecommons.org/licenses/by/3.
 | bus.glb | Schoolbus | Poly by Google | CC-BY 3.0 | https://poly.pizza/m/8xacyNqdJ3t |
 | ambulance.glb | Ambulance | Poly by Google | CC-BY 3.0 | https://poly.pizza/m/8NOFImgkI5N |
 | backpack.glb | Backpack | J-Toastie | CC-BY 3.0 | https://poly.pizza/m/N2wKlicUau |
+| lorry.glb | Truck | Quaternius | CC0 | https://poly.pizza/m/cXw6oiFtZ8 |
+| pickup.glb | Pickup Truck | Quaternius | CC0 | https://poly.pizza/m/qn4grQgHm8 |
+| suv.glb | SUV | Quaternius | CC0 | https://poly.pizza/m/xsMtZhBkxL |
+| car_old.glb | 80s Car | Nick Ladd | CC-BY 3.0 | https://poly.pizza/m/7tPSW5UYD20 |
+| truck_old.glb | Old Truck | Don Carson | CC-BY 3.0 | https://poly.pizza/m/bkSACPrC0Ej |
+| dump_truck.glb | Dump truck | jeremy | CC-BY 3.0 | https://poly.pizza/m/1BpGYg14QGD |
+| tractor.glb | Tractor | Poly by Google | CC-BY 3.0 | https://poly.pizza/m/5TGoA5N14c5 |
+| van.glb | Van | Poly by Google | CC-BY 3.0 | https://poly.pizza/m/aT_24cDaW1a |
+| motorbike.glb | Motorcycle | Poly by Google | CC-BY 3.0 | https://poly.pizza/m/5_MTCnqfUTr |
 
 **People** (`person_kid_m`, `person_kid_f`, `person_man`, `person_woman`) were made with
 [MakeHuman / MPFB 2](https://static.makehumancommunity.org/mpfb.html) and its CC0 `makehuman_system_assets` pack

@@ -140,12 +140,12 @@ export const HUD = {
     this.vctlClose();
     const v = this.vctl = el(`<div class="vctl">
       <div class="joy" id="v-joy"><i></i></div>
-      <div class="vbtns">
+      ${o.signal ? `<div class="vbtns">
         <button class="icon-btn" data-s="L" title="Isyarat kiri (Z)">⬅️</button>
         <button class="icon-btn" data-s="bell" title="Loceng / hon (H)">🔔</button>
         <button class="icon-btn" data-s="R" title="Isyarat kanan (C)">➡️</button>
       </div>
-      <div class="speed" id="v-spd">0 km/j</div>
+      <div class="speed" id="v-spd">0 km/j</div>` : ''}
     </div>`);
     $('#hud').appendChild(v); this.root.classList.add('riding');   // css moves the minimap above the joystick
     v.querySelectorAll('[data-s]').forEach(b => b.onclick = () => o.signal(b.dataset.s));

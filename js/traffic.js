@@ -2,7 +2,7 @@
 import { key, DIR, OPP, lanePath, polyLen, polyAt, exits, sideBetween, isStraight, roadRoute } from './map.js';
 import { E } from './engine.js';
 import { Y_ROAD } from './world.js';
-import { makeCar, setLights } from './vehicles.js';
+import { makeCar, makeRidden, setLights, TRAFFIC, randomKind } from './vehicles.js';
 
 // ---------------- signals ----------------
 const PHASES = [['NS', 'G', 12], ['NS', 'A', 3], ['-', 'R', 2], ['EW', 'G', 12], ['EW', 'A', 3], ['-', 'R', 2]];
@@ -67,14 +67,21 @@ export class Traffic {
     for (let k = 0; k < n && roads.length; k++) {
       const t = roads.splice((Math.random() * roads.length) | 0, 1)[0];
       const c = this.map.conn(...t);
-      this.add({ tile: t, ent: c[(Math.random() * c.length) | 0], s: 3 });
+      this.add({ tile: t, ent: c[(Math.random() * c.length) | 0], s: 3, ...this.mixed() });
     }
+  }
+
+  // a random town vehicle (unless the scene supplies its own, like the karts in the traffic garden)
+  mixed(kind = randomKind()) {
+    if (this.opts.kinds || this.opts.make) return {};
+    const t = TRAFFIC[kind], f = this.opts.vmax / 8;
+    return { kind, half: t.half, vmax: (t.v[0] + Math.random() * (t.v[1] - t.v[0])) * f, mesh: t.rider ? makeRidden(kind) : makeCar(kind) };
   }
 
   // opts: tile, ent, mesh, kind, route [[i,j]...], vmax, half (half length), bad, s
   add(o) {
     const car = {
-      id: NEXT_ID++, tile: o.tile, ent: o.ent, s: o.s || 0, v: 0,
+      id: NEXT_ID++, kind: o.kind, tile: o.tile, ent: o.ent, s: o.s || 0, v: 0,
       vmax: o.vmax ?? this.opts.vmax * (0.85 + Math.random() * 0.3), half: o.half ?? this.opts.half ?? 2.3,
       bad: o.bad ?? (Math.random() < this.opts.bad), route: o.route || null, ri: 0,
       mesh: o.mesh || (this.opts.make ? this.opts.make() : makeCar(this.opts.kinds ? this.opts.kinds[(Math.random() * this.opts.kinds.length) | 0] : o.kind)),
@@ -101,7 +108,7 @@ export class Traffic {
   pickExit(car, tile, ent) {
     // a chasing police car takes the same exit as the car it is following
     const t = car.chase;
-    if (t && t.tile[0] === tile[0] && t.tile[1] === tile[1]) return t.ext;
+    if (t && t.ext && t.tile[0] === tile[0] && t.tile[1] === tile[1]) return t.ext;
     if (car.route) {
       const idx = car.route.findIndex((t, k) => k >= car.ri && t[0] === tile[0] && t[1] === tile[1]);
       if (idx >= 0 && idx < car.route.length - 1) return sideBetween(tile, car.route[idx + 1]);
@@ -224,7 +231,12 @@ export class Traffic {
   // police car `p` follows `car` through the road network and pulls it over
   chase(p, car) {
     p.chase = car; p.siren = true; p.vmax = 12;
-    p.route = roadRoute(this.map, p.tile, car.tile); p.ri = 0;
+    this.reroute(p); this.planNext(p);
+  }
+  // a chaser routes from the tile it is about to enter: its exit from this one is already committed
+  reroute(car) {
+    const ni = [car.tile[0] + DIR[car.ext][0], car.tile[1] + DIR[car.ext][1]], r = roadRoute(this.map, ni, car.chase.tile);
+    car.route = r && [car.tile, ...r]; car.ri = 0;
   }
 
   update(dt, obstacles = []) {
@@ -277,7 +289,7 @@ export class Traffic {
 
       // police: pull the target over once right behind it, then issue the summons
       const tg = car.chase;
-      if (tg) {
+      if (tg && !tg.isPlayer) {
         const d = Math.hypot(tg.x - car.x, tg.z - car.z), done = { chase: null, siren: false, route: null, vmax: 8, leaving: 20 };
         car.chaseT = (car.chaseT || 0) + dt;
         if (!this.cars.includes(tg) || car.chaseT > 90) { tg.pulled = false; Object.assign(car, done); }   // lost them
@@ -302,12 +314,13 @@ export class Traffic {
         Object.assign(car, { tile: car.next.tile, ent: car.next.ent, ext: car.next.ext, path: car.next.path, len: car.next.len });
         delete car.stopped[key(...car.tile)];   // full stop is needed again next time we approach
         car.runRed = car.bad && Math.random() < 0.6;
-        if (car.chase) { car.route = roadRoute(this.map, car.tile, car.chase.tile); car.ri = 0; }
+        if (car.chase) this.reroute(car);
         if (car.route) { const idx = car.route.findIndex((t, n) => n >= car.ri && t[0] === car.tile[0] && t[1] === car.tile[1]); if (idx >= 0) car.ri = idx; if (car.ri >= car.route.length - 1 && car.onRouteEnd) car.onRouteEnd(car); }
         this.planNext(car);
       }
       this.place(car);
       setLights(car.mesh, night || car.siren);
+      car.mesh.userData.rider?.animate(dt, car.v);
       // a pedestrian inside the front of a moving car is hit
       if (car.v > 1.2 && this.onHit) for (const o of obstacles) {
         if (o.kind !== 'ped' || o.injured) continue;

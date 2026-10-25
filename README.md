@@ -21,7 +21,8 @@ run red lights and are chased, pulled over and fined by a police car, and a car 
 ambulance comes to take them away. If it is you, the mission ends with an explanation.
 
 ## Controls
-- **Walk:** click or tap the ground; 🏃 or hold Shift to run. At every kerb the game stops you for the kerb drill: ← kiri, → kanan, Space lintas, B pelican button. Clicking across the road again also crosses (skipping the drill still earns a saman).
+- **Walk:** W/A/S/D (or arrows, or the joystick on touch screens) walks freely anywhere, roads included; or click/tap the ground. 🏃 or hold Shift to run. Stop at a kerb facing the road and the kerb drill opens: ← kiri, → kanan, Space lintas, B pelican button. Stepping onto the road without it, off a crossing or on a red man earns a saman.
+- **Polis:** officers stand at junctions, walk the pavements, ride patrol bikes and drive patrol cars. Break a rule and the nearest one comes after you and stops you; drivers who break the law are pulled over too.
 - **Ride:** W/A/S/D or the on-screen joystick. Z / C give left / right signals, H rings the bell.
 - **Camera:** hold right-click and drag (or two fingers) to look all the way round and tilt, mouse wheel or pinch to zoom, Q/E to turn 45°.
 - **Map:** the GTA-style minimap (bottom left) turns with the camera and pins the mission destination; M or a click opens the full map.
@@ -53,6 +54,9 @@ python tests/e2e_piala.py
 ```
 ```bash
 python tests/e2e_bina.py
+```
+```bash
+python tests/e2e_police.py
 ```
 
 `e2e_missions.py` takes a mission number from 0 to 6. Screenshots go to `tests/shots/`.

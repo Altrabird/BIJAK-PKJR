@@ -28,9 +28,9 @@ with sync_playwright() as p:
           if (G.npcs.some(w => { if (w.injured || w.state !== 'walk') return false; const lx = w.x - c.x, lz = w.z - c.z; return Math.abs(lx * c.dx + lz * c.dz) < c.half + 0.2 && Math.abs(lx * c.dz - lz * c.dx) < 1.0; })) through++;
         }
       }
-      // a careless driver with someone standing 5 m ahead in its lane, on the clearest stretch of road
+      // a careless car driver (not a short motorbike, which can stop in time) with someone standing 5 m ahead in its lane, on the clearest stretch of road
       const clear = k => k.len - k.s > 6 && !T.cars.some(o => o !== k && Math.hypot(o.x - k.x, o.z - k.z) < 15);
-      const c = T.cars.filter(k => !k.temp && clear(k)).sort((a, b) => T.controlGap(b, 0) - T.controlGap(a, 0))[0];
+      const c = T.cars.filter(k => !k.temp && !k.police && k.half >= 2 && clear(k)).sort((a, b) => T.controlGap(b, 0) - T.controlGap(a, 0))[0];
       Object.assign(c, { bad: true, v: 7.5, vmax: 8.5 });
       const pt = polyAt(c.path, c.s + 5), w = G.npcs[0]; w.place(pt.x, pt.z); w.rest = 999;
       let hit = false, picked = false;

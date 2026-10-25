@@ -21,7 +21,7 @@ export class Walker {
   }
 
   goTo(x, z) {
-    const p = findPath(this.map, [this.x, this.z], [x, z]);
+    const p = findPath(this.map, [this.x, this.z], [x, z], this.roadCost);
     if (!p || p.length < 2) return false;
     this.path = p; this.idx = 1; this.state = 'walk'; this.waiting = false; this.kerb = null;
     return true;
@@ -60,6 +60,13 @@ export class Walker {
           this.yaw = Math.atan2(dx, dz);
         }
       }
+    }
+    // direct control (keys / joystick): free movement anywhere, sliding along buildings and trees
+    if (this.drive) {
+      const [dx, dz] = this.drive, step = this.speed * dt, free = (x, z) => m.cellAt(x, z) !== CELL.BLOCK;
+      if (free(this.x + dx * (step + 0.3), this.z)) this.x += dx * step;
+      if (free(this.x, this.z + dz * (step + 0.3))) this.z += dz * step;
+      this.yaw = Math.atan2(dx, dz); moving = true;
     }
     if (this.state === 'kerb') this.kerb.t += dt;
     this.v = moving ? this.speed : 0;
